@@ -12,61 +12,66 @@ struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Workout.date, ascending: true)],
         animation: .default)
-    private var items: FetchedResults<Item>
+    private var workouts: FetchedResults<Workout>
 
     var body: some View {
         NavigationView {
             List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+                ForEach(workouts) { workout in
+                    if !workout.isDeleted && !workout.isFault { // Safeguard for deleted/faulted objects
+                        NavigationLink {
+                            Text("Workout on \(workout.date ?? Date(), formatter: dateFormatter)")
+                        } label: {
+                            Text(workout.date ?? Date(), formatter: dateFormatter)
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete(perform: deleteWorkouts)
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
                 ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button(action: addWorkout) {
+                        Label("Add Workout", systemImage: "plus")
                     }
                 }
             }
-            Text("Select an item")
+            Text("Select a workout")
         }
     }
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+    private func addWorkout() {
+        viewContext.performAndWait { // Ensure thread safety
+            let newWorkout = Workout(context: viewContext)
+            newWorkout.id = UUID() // Assign a unique identifier
+            newWorkout.date = Date()
+            newWorkout.distance = 0.0
+            newWorkout.duration = 0.0
+            newWorkout.reps = 0
+            newWorkout.sets = 0
+            newWorkout.type = "Default"
+            newWorkout.weight = 0.0
 
             do {
                 try viewContext.save()
             } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
+    private func deleteWorkouts(offsets: IndexSet) {
+        viewContext.performAndWait { // Ensure thread safety
+            offsets.map { workouts[$0] }.forEach(viewContext.delete)
 
             do {
                 try viewContext.save()
             } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
@@ -74,7 +79,7 @@ struct ContentView: View {
     }
 }
 
-private let itemFormatter: DateFormatter = {
+private let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateStyle = .short
     formatter.timeStyle = .medium

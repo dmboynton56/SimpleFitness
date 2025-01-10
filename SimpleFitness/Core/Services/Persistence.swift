@@ -15,8 +15,15 @@ struct PersistenceController {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
         for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+            let newWorkout = Workout(context: viewContext)
+            newWorkout.date = Date()
+            newWorkout.distance = 0.0
+            newWorkout.duration = 0.0
+            newWorkout.reps = 0
+            newWorkout.sets = 0
+            newWorkout.type = "Default"
+            newWorkout.weight = 0.0
+
         }
         do {
             try viewContext.save()
@@ -32,7 +39,7 @@ struct PersistenceController {
     let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "SimpleFitness")
+        container = NSPersistentContainer(name: "SimpleFitnessModel")
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
         }

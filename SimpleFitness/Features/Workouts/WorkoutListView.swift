@@ -34,17 +34,25 @@ struct WorkoutRowView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text(workout.type)
+            Text(workout.type ?? "Unknown")
                 .font(.headline)
-            Text(workout.date, style: .date)
+            Text("Workout on \(workout.date ?? Date(), formatter: dateFormatter)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
     }
 }
 
+// Define the dateFormatter locally within this file
+private let dateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .short
+    formatter.timeStyle = .medium
+    return formatter
+}()
+
 struct WorkoutListView_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutListView()
     }
-} 
+}

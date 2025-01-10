@@ -24,14 +24,44 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		BEF14CE92D318700008A0B3C /* SimpleFitness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleFitness.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		BEF14CFE2D318702008A0B3C /* SimpleFitnessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleFitnessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		BEF14D082D318702008A0B3C /* SimpleFitnessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleFitnessUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE405DB12D319794006B3CC6 /* SimpleFitness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleFitness.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE405DC12D31A8D9006B3CC6 /* SimpleFitnessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleFitnessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE405DC22D31A8D9006B3CC6 /* SimpleFitnessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleFitnessUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE405DFA2D31A8F4006B3CC6 /* Workout+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Workout+CoreDataClass.swift"; path = "SimpleFitness/Core/Models/Workout+CoreDataClass.swift"; sourceTree = "<group>"; };
+		BE405DFB2D31A8F4006B3CC6 /* Workout+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Workout+CoreDataProperties.swift"; path = "SimpleFitness/Core/Models/Workout+CoreDataProperties.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BE405DB02D3196E9006B3CC6 /* Exceptions for "SimpleFitness" folder in "SimpleFitness" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Models/SimpleFitnessModel.xcdatamodeld,
+				Info.plist,
+				Resources/Info.plist,
+				SimpleFitness.xcdatamodeld,
+			);
+			target = BEF14CE82D318700008A0B3C /* SimpleFitness */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		BE405EB22D31B45C006B3CC6 /* Exceptions for "SimpleFitness" folder in "Copy Bundle Resources" phase from "SimpleFitness" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = BEF14CE72D318700008A0B3C /* Resources */;
+			membershipExceptions = (
+				Core/Models/SimpleFitnessModel.xcdatamodeld,
+				SimpleFitness.xcdatamodeld,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		BEF14CEB2D318700008A0B3C /* SimpleFitness */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BE405DB02D3196E9006B3CC6 /* Exceptions for "SimpleFitness" folder in "SimpleFitness" target */,
+				BE405EB22D31B45C006B3CC6 /* Exceptions for "SimpleFitness" folder in "Copy Bundle Resources" phase from "SimpleFitness" target */,
+			);
 			path = SimpleFitness;
 			sourceTree = "<group>";
 		};
@@ -75,21 +105,15 @@
 		BEF14CE02D318700008A0B3C = {
 			isa = PBXGroup;
 			children = (
+				BE405DFA2D31A8F4006B3CC6 /* Workout+CoreDataClass.swift */,
+				BE405DFB2D31A8F4006B3CC6 /* Workout+CoreDataProperties.swift */,
 				BEF14CEB2D318700008A0B3C /* SimpleFitness */,
 				BEF14D012D318702008A0B3C /* SimpleFitnessTests */,
 				BEF14D0B2D318702008A0B3C /* SimpleFitnessUITests */,
-				BEF14CEA2D318700008A0B3C /* Products */,
+				BE405DB12D319794006B3CC6 /* SimpleFitness.app */,
+				BE405DC12D31A8D9006B3CC6 /* SimpleFitnessTests.xctest */,
+				BE405DC22D31A8D9006B3CC6 /* SimpleFitnessUITests.xctest */,
 			);
-			sourceTree = "<group>";
-		};
-		BEF14CEA2D318700008A0B3C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				BEF14CE92D318700008A0B3C /* SimpleFitness.app */,
-				BEF14CFE2D318702008A0B3C /* SimpleFitnessTests.xctest */,
-				BEF14D082D318702008A0B3C /* SimpleFitnessUITests.xctest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -114,7 +138,7 @@
 			packageProductDependencies = (
 			);
 			productName = SimpleFitness;
-			productReference = BEF14CE92D318700008A0B3C /* SimpleFitness.app */;
+			productReference = BE405DB12D319794006B3CC6 /* SimpleFitness.app */;
 			productType = "com.apple.product-type.application";
 		};
 		BEF14CFD2D318702008A0B3C /* SimpleFitnessTests */ = {
@@ -137,7 +161,7 @@
 			packageProductDependencies = (
 			);
 			productName = SimpleFitnessTests;
-			productReference = BEF14CFE2D318702008A0B3C /* SimpleFitnessTests.xctest */;
+			productReference = BE405DC12D31A8D9006B3CC6 /* SimpleFitnessTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		BEF14D072D318702008A0B3C /* SimpleFitnessUITests */ = {
@@ -160,7 +184,7 @@
 			packageProductDependencies = (
 			);
 			productName = SimpleFitnessUITests;
-			productReference = BEF14D082D318702008A0B3C /* SimpleFitnessUITests.xctest */;
+			productReference = BE405DC22D31A8D9006B3CC6 /* SimpleFitnessUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -196,7 +220,7 @@
 			mainGroup = BEF14CE02D318700008A0B3C;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = BEF14CEA2D318700008A0B3C /* Products */;
+			productRefGroup = BEF14CE02D318700008A0B3C;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -399,6 +423,9 @@
 				DEVELOPMENT_TEAM = N4532ARD6Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SimpleFitness/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "SimpleFitness requires background location to continue tracking your runs and bike rides";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SimpleFitness needs your location to track your outdoor workouts";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +455,9 @@
 				DEVELOPMENT_TEAM = N4532ARD6Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SimpleFitness/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "SimpleFitness requires background location to continue tracking your runs and bike rides";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SimpleFitness needs your location to track your outdoor workouts";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

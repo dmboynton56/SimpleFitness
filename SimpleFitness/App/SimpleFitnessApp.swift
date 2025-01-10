@@ -1,0 +1,22 @@
+//
+//  SimpleFitnessApp.swift
+//  SimpleFitness
+//
+//  Created by Drew Boynton on 1/10/25.
+//
+
+import SwiftUI
+
+@main
+struct SimpleFitnessApp: App {
+    let persistenceController = PersistenceController.shared
+    @StateObject private var locationManager = LocationManager()
+
+    var body: some Scene {
+        WindowGroup {
+            WorkoutListView()
+                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environmentObject(locationManager)
+        }
+    }
+}

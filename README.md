@@ -42,47 +42,42 @@ The project follows the MVVM (Model-View-ViewModel) architecture pattern and is 
 
 ## File Structure
 
-## File Structure
-
 SimpleFitness/
 ├── App/
-│   └── SimpleFitnessApp.swift
+│ └── SimpleFitnessApp.swift
 ├── Core/
-│   ├── Models/
-│   │   ├── SimpleFitnessModel.xcdatamodeld
-│   │   ├── Workout+CoreDataClass.swift
-│   │   ├── Exercise+CoreDataClass.swift
-│   │   ├── Workout+CoreDataProperties.swift
-│   │   └── Exercise+CoreDataProperties.swift
-│   └── Services/
-│       ├── LocationManager.swift
-│       └── PersistenceController.swift
+│ ├── Models/
+│ │ ├── SimpleFitnessModel.xcdatamodeld
+│ │ ├── Workout+CoreDataClass.swift
+│ │ ├── Exercise+CoreDataClass.swift
+│ │ ├── Workout+CoreDataProperties.swift
+│ │ └── Exercise+CoreDataProperties.swift
+│ └── Services/
+│ ├── LocationManager.swift
+│ └── PersistenceController.swift
 ├── Features/
-│   ├── Workouts/
-│   │   ├── Add/
-│   │   │   ├── AddWorkoutView.swift
-│   │   │   ├── AddWorkoutViewModel.swift
-│   │   │   ├── Components/
-│   │   │   │   ├── WorkoutTypeSelectionView.swift
-│   │   │   │   ├── StrengthWorkoutForm.swift
-│   │   │   │   ├── CardioWorkoutForm.swift
-│   │   │   │   └── ActiveWorkoutView.swift
-│   │   │   └── Models/
-│   │   │       ├── ExerciseFormModel.swift
-│   │   │       └── WorkoutFormModel.swift
-│   │   ├── List/
-│   │   │   ├── WorkoutListView.swift
-│   │   │   └── WorkoutListViewModel.swift
-│   │   └── Detail/
-│   │       ├── WorkoutDetailView.swift
-│   │       └── WorkoutDetailViewModel.swift
-│   │       └── Components/
-│   │           └── ExerciseEditForm.swift
+│ ├── Workouts/
+│ │ ├── Add/
+│ │ │ ├── AddWorkoutView.swift
+│ │ │ ├── AddWorkoutViewModel.swift
+│ │ │ ├── Components/
+│ │ │ │ ├── WorkoutTypeSelectionView.swift
+│ │ │ │ ├── StrengthWorkoutForm.swift
+│ │ │ │ ├── CardioWorkoutForm.swift
+│ │ │ │ └── ActiveWorkoutView.swift
+│ │ │ └── Models/
+│ │ │ ├── ExerciseFormModel.swift
+│ │ │ └── WorkoutFormModel.swift
+│ │ ├── List/
+│ │ │ ├── WorkoutListView.swift
+│ │ │ └── WorkoutListViewModel.swift
+│ │ └── Detail/
+│ │ WorkoutDetailView.swift
+│ │ WorkoutDetailViewModel.swift
+│ | Components/
+| ExerciseEditForm.swift
 ├── Views/
-│   └── NumberField.swift
-└── Resources/
-    ├── Info.plist
-    └── Assets.xcassets
+| NumberField.Swift
 
 ## License
 

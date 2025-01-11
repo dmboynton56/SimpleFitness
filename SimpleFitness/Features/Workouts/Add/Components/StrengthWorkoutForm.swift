@@ -90,29 +90,6 @@ struct ExerciseRow: View {
     }
 }
 
-struct NumberField: View {
-    let label: String
-    @Binding var value: String
-    let range: ClosedRange<Double>
-    let onUpdate: () -> Void
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            TextField(label, text: $value)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onChange(of: value) { _ in
-                    if let number = Double(value), range.contains(number) {
-                        onUpdate()
-                    }
-                }
-        }
-    }
-}
-
 struct AddExerciseView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var exerciseName = ""

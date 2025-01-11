@@ -89,6 +89,10 @@ fastlane/test_output
 
 iOSInjectionProject/
 
+# App specific
+SimpleFitness/Resources/Assets.xcassets/BiggestFitness.imageset/
+SimpleFitness/Resources/Assets.xcassets/BiggestFitness.png
+
 # macOS
 .DS_Store
 

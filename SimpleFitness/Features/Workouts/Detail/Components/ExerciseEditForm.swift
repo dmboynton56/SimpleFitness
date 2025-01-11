@@ -2,20 +2,23 @@ import SwiftUI
 
 struct ExerciseEditForm: View {
     let exercise: Exercise
-    let onSave: (String, Int, Int, Double) -> Void
+    let onSave: (String, Int16, Double) -> Void
     
     @State private var name: String
-    @State private var sets: String
     @State private var reps: String
     @State private var weight: String
     
-    init(exercise: Exercise, onSave: @escaping (String, Int, Int, Double) -> Void) {
+    init(exercise: Exercise, onSave: @escaping (String, Int16, Double) -> Void) {
         self.exercise = exercise
         self.onSave = onSave
-        _name = State(initialValue: exercise.name)
-        _sets = State(initialValue: String(exercise.sets))
-        _reps = State(initialValue: String(exercise.reps))
-        _weight = State(initialValue: String(format: "%.1f", exercise.weight))
+        
+        // Initialize with default values if nil
+        _name = State(initialValue: exercise.name ?? "")
+        
+        // Get the first set's values or defaults
+        let firstSet = (exercise.sets as? Set<ExerciseSet>)?.first
+        _reps = State(initialValue: String(firstSet?.reps ?? 0))
+        _weight = State(initialValue: String(format: "%.1f", firstSet?.weight ?? 0.0))
     }
     
     var body: some View {
@@ -28,10 +31,6 @@ struct ExerciseEditForm: View {
                 }
             
             HStack {
-                NumberField(label: "Sets", value: $sets, range: 1...99) {
-                    saveChanges()
-                }
-                
                 NumberField(label: "Reps", value: $reps, range: 1...99) {
                     saveChanges()
                 }
@@ -45,12 +44,11 @@ struct ExerciseEditForm: View {
     }
     
     private func saveChanges() {
-        guard let setsNum = Int(sets),
-              let repsNum = Int(reps),
+        guard let repsNum = Int16(reps),
               let weightNum = Double(weight) else {
             return
         }
         
-        onSave(name, setsNum, repsNum, weightNum)
+        onSave(name, repsNum, weightNum)
     }
 } 

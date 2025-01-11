@@ -36,11 +36,15 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/Models/SimpleFitnessModel.xcdatamodeld,
+				Features/Workouts/Add/Components/ExerciseSelector/ExerciseTemplateList.swift,
+				Features/Workouts/Add/Components/ExerciseSelector/ExerciseTemplateListViewModel.swift,
+				Features/Workouts/Add/Components/ExerciseSelector/ExerciseTemplateRow.swift,
+				Features/Workouts/Add/Components/ExerciseSets/SetList.swift,
+				Features/Workouts/Add/Components/ExerciseSets/SetRow.swift,
 				Features/Workouts/WorkoutListView.swift,
 				Features/Workouts/WorkoutListViewModel.swift,
 				Info.plist,
 				Resources/Info.plist,
-				SimpleFitness.xcdatamodeld,
 			);
 			target = BEF14CE82D318700008A0B3C /* SimpleFitness */;
 		};

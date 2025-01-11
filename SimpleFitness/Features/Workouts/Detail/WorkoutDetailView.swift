@@ -12,6 +12,20 @@ struct WorkoutDetailView: View {
         List {
             // Workout Metadata Section
             Section {
+                if viewModel.isEditing {
+                    TextField("Workout Name", text: Binding(
+                        get: { viewModel.workout.name ?? "" },
+                        set: { viewModel.updateWorkoutName($0) }
+                    ))
+                } else {
+                    HStack {
+                        Text("Name")
+                        Spacer()
+                        Text(viewModel.workout.name ?? "Untitled Workout")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
                 HStack {
                     Text("Type")
                     Spacer()
@@ -50,22 +64,22 @@ struct WorkoutDetailView: View {
                 Section {
                     ForEach(viewModel.exercises) { exercise in
                         if viewModel.isEditing {
-                            ExerciseEditForm(exercise: exercise) { name, sets, reps, weight in
-                                viewModel.updateExercise(exercise, name: name, sets: sets, reps: reps, weight: weight)
+                            ExerciseEditForm(exercise: exercise) { name, reps, weight in
+                                viewModel.updateExercise(exercise, name: name, reps: reps, weight: weight)
                             }
                         } else {
                             VStack(alignment: .leading) {
-                                Text(exercise.name)
+                                Text(exercise.name ?? "")
                                     .font(.headline)
-                                HStack {
-                                    Text("\(exercise.sets) sets")
-                                    Text("•")
-                                    Text("\(exercise.reps) reps")
-                                    Text("•")
-                                    Text(String(format: "%.1f lbs", exercise.weight))
+                                if let sets = exercise.sets as? Set<ExerciseSet>, let firstSet = sets.first {
+                                    HStack {
+                                        Text("\(firstSet.reps) reps")
+                                        Text("•")
+                                        Text(String(format: "%.1f lbs", firstSet.weight))
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                                 }
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
                             }
                             .padding(.vertical, 4)
                         }

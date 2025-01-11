@@ -20,6 +20,7 @@ extension Workout: Identifiable {
     @NSManaged public var distance: Double
     @NSManaged public var duration: Double
     @NSManaged public var id: UUID?
+    @NSManaged public var name: String?
     @NSManaged public var notes: String?
     @NSManaged public var type: String?
     @NSManaged public var exercises: NSSet?

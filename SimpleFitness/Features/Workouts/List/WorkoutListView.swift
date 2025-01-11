@@ -10,17 +10,21 @@ struct WorkoutListView: View {
                 ForEach(viewModel.workouts) { workout in
                     NavigationLink(destination: WorkoutDetailView(workout: workout)) {
                         VStack(alignment: .leading, spacing: 4) {
+                            Text(workout.name ?? "Untitled Workout")
+                                .font(.headline)
+                            
                             HStack {
                                 Text(workout.type ?? "Unknown")
-                                    .font(.headline)
-                                Spacer()
-                                Text(viewModel.formattedDate(workout.date))
-                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("•")
+                                    .foregroundColor(.secondary)
+                                Text(viewModel.workoutDetails(workout))
                                     .foregroundColor(.secondary)
                             }
+                            .font(.subheadline)
                             
-                            Text(viewModel.workoutDetails(workout))
-                                .font(.subheadline)
+                            Text(viewModel.formattedDate(workout.date))
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         .padding(.vertical, 4)

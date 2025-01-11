@@ -17,15 +17,34 @@ class WorkoutDetailViewModel: ObservableObject {
     
     private func loadExercises() {
         if let exercises = workout.exercises as? Set<Exercise> {
-            self.exercises = Array(exercises).sorted { $0.name < $1.name }
+            self.exercises = Array(exercises).sorted { 
+                let name1 = $0.name ?? ""
+                let name2 = $1.name ?? ""
+                return name1 < name2
+            }
         }
     }
     
-    func updateExercise(_ exercise: Exercise, name: String, sets: Int, reps: Int, weight: Double) {
+    func updateWorkoutName(_ name: String) {
+        workout.name = name.isEmpty ? nil : name
+        saveChanges()
+    }
+    
+    func updateExercise(_ exercise: Exercise, name: String, reps: Int16, weight: Double) {
         exercise.name = name
-        exercise.sets = Int16(sets)
-        exercise.reps = Int16(reps)
-        exercise.weight = weight
+        
+        // Update the first set or create one if it doesn't exist
+        if let sets = exercise.sets as? Set<ExerciseSet>, let firstSet = sets.first {
+            firstSet.reps = reps
+            firstSet.weight = weight
+        } else {
+            let set = ExerciseSet(context: viewContext)
+            set.id = UUID()
+            set.exercise = exercise
+            set.order = 0
+            set.reps = reps
+            set.weight = weight
+        }
         
         saveChanges()
         loadExercises() // Reload to reflect any sorting changes

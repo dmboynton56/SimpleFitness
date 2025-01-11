@@ -9,6 +9,8 @@ A simple iOS fitness tracking application that allows users to manually log work
 - Duration and distance logging
 - Optional GPS tracking for outdoor activities
 - Workout history viewing
+- Exercise templates and categorization
+- Set grouping by weight
 
 ## Requirements
 
@@ -51,11 +53,16 @@ SimpleFitness/
 │   ├── Models/
 │   │   ├── SimpleFitnessModel.xcdatamodeld/
 │   │   ├── Exercise.swift
+│   │   ├── ExerciseTemplate+CoreDataClass.swift
+│   │   ├── ExerciseTemplate+CoreDataProperties.swift
+│   │   ├── ExerciseSet+CoreDataClass.swift
+│   │   ├── ExerciseSet+CoreDataProperties.swift
 │   │   ├── Workout+CoreDataClass.swift
 │   │   └── Workout+CoreDataProperties.swift
 │   └── Services/
 │       ├── LocationManager.swift
-│       └── Persistence.swift
+│       ├── Persistence.swift
+│       └── ExerciseTemplateService.swift
 ├── Features/
 │   ├── Profile/
 │   ├── Settings/
@@ -67,24 +74,25 @@ SimpleFitness/
 │       │   │   ├── WorkoutTypeSelectionView.swift
 │       │   │   ├── StrengthWorkoutForm.swift
 │       │   │   ├── CardioWorkoutForm.swift
-│       │   │   └── ActiveWorkoutView.swift
+│       │   │   ├── ActiveWorkoutView.swift
+│       │   │   ├── ExerciseTemplateList.swift
+│       │   │   ├── ExerciseTemplateListViewModel.swift
+│       │   │   ├── ExerciseTemplateRow.swift
+│       │   │   ├── NewExerciseTemplateSheet.swift
+│       │   │   ├── SetList.swift
+│       │   │   └── SetRow.swift
 │       │   └── Models/
 │       │       ├── ExerciseFormModel.swift
 │       │       └── WorkoutFormModel.swift
 │       ├── Detail/
 │       │   ├── WorkoutDetailView.swift
-│       │   ├── WorkoutDetailViewModel.swift
-│       │   └── Components/
-│       │       └── ExerciseEditForm.swift
-│       ├── List/
-│       │   ├── WorkoutListView.swift
-│       │   └── WorkoutListViewModel.swift
-│       ├── WorkoutListView.swift
-│       └── WorkoutListViewModel.swift
+│       │   └── WorkoutDetailViewModel.swift
+│       └── List/
+│           ├── WorkoutListView.swift
+│           └── WorkoutListViewModel.swift
 ├── Info.plist
 ├── Preview Content/
 ├── Resources/
-│   └── Info.plist
 ├── Shared/
 ├── Utils/
 └── Views/

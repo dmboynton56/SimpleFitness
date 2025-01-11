@@ -6,6 +6,7 @@ import CoreLocation
 class AddWorkoutViewModel: ObservableObject {
     // Shared properties
     @Published var workoutType: WorkoutType?
+    @Published var workoutName: String = ""
     @Published var notes: String = ""
     
     // Strength workout properties
@@ -19,15 +20,29 @@ class AddWorkoutViewModel: ObservableObject {
     @Published var distance: String = ""
     @Published var activeDistance: Double?
     
-    private let viewContext: NSManagedObjectContext
+    let viewContext: NSManagedObjectContext
     private let locationManager: LocationManager
+    private let templateService: ExerciseTemplateService
     private var locationSubscription: AnyCancellable?
     private var startLocation: CLLocation?
     
     init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext,
-         locationManager: LocationManager = LocationManager.shared) {
+         locationManager: LocationManager = LocationManager.shared,
+         templateService: ExerciseTemplateService = ExerciseTemplateService.shared) {
         self.viewContext = context
         self.locationManager = locationManager
+        self.templateService = templateService
+    }
+    
+    func addExerciseFromTemplate(_ template: ExerciseTemplate) {
+        let exercise = ExerciseFormModel(
+            name: template.name ?? "",
+            sets: 1,
+            reps: 10,
+            weight: 0.0
+        )
+        exercises.append(exercise)
+        templateService.updateLastUsed(template)
     }
     
     // MARK: - Location Tracking
@@ -85,6 +100,8 @@ class AddWorkoutViewModel: ObservableObject {
         workout.id = UUID()
         workout.date = Date()
         workout.type = workoutType?.rawValue
+        workout.name = workoutName.isEmpty ? nil : workoutName
+        workout.notes = notes.isEmpty ? nil : notes
         
         switch workoutType {
         case .strength:
@@ -103,24 +120,22 @@ class AddWorkoutViewModel: ObservableObject {
     }
     
     private func saveStrengthWorkout(_ workout: Workout) {
-        // Create Exercise entities and associate them with the workout
         exercises.forEach { exerciseForm in
-            let exerciseEntity = Exercise(context: viewContext)
-            exerciseEntity.id = exerciseForm.id
-            exerciseEntity.name = exerciseForm.name
-            exerciseEntity.sets = Int16(exerciseForm.sets)
-            exerciseEntity.reps = Int16(exerciseForm.reps)
-            exerciseEntity.weight = exerciseForm.weight
-            exerciseEntity.workout = workout
+            let exercise = exerciseForm.toExercise(context: viewContext)
+            exercise.workout = workout
+            
+            // Find and link template
+            if let template = templateService.findTemplate(named: exercise.name) {
+                exercise.template = template
+                templateService.updateLastUsed(template)
+            }
         }
     }
     
     private func saveCardioWorkout(_ workout: Workout) {
-        // Convert duration to seconds
         let totalSeconds = (hours * 3600) + (minutes * 60) + seconds
         workout.duration = Double(totalSeconds)
         
-        // Convert distance string to double
         if let distance = Double(distance) {
             workout.distance = distance
         }

@@ -11,13 +11,19 @@ struct AddWorkoutView: View {
                 if viewModel.workoutType == nil {
                     WorkoutTypeSelectionView(selectedType: $viewModel.workoutType)
                 } else {
-                    switch viewModel.workoutType {
-                    case .strength:
-                        StrengthWorkoutForm(viewModel: viewModel)
-                    case .running, .biking:
-                        CardioWorkoutForm(viewModel: viewModel)
-                    case .none:
-                        EmptyView()
+                    VStack(spacing: 16) {
+                        TextField("Workout Name (optional)", text: $viewModel.workoutName)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                        
+                        switch viewModel.workoutType {
+                        case .strength:
+                            StrengthWorkoutForm(viewModel: viewModel)
+                        case .running, .biking:
+                            CardioWorkoutForm(viewModel: viewModel)
+                        case .none:
+                            EmptyView()
+                        }
                     }
                 }
             }

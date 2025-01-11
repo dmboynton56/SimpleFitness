@@ -2,23 +2,38 @@ import Foundation
 import CoreData
 import SwiftUI
 
-class WorkoutListViewModel: ObservableObject {
+class WorkoutListViewModel: NSObject, ObservableObject {
     @Published var workouts: [Workout] = []
     @Published var showingAddWorkout = false
     
     private let viewContext: NSManagedObjectContext
+    private var workoutsController: NSFetchedResultsController<Workout>?
     
     init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
         self.viewContext = context
+        super.init()
+        setupFetchedResultsController()
         fetchWorkouts()
     }
     
-    func fetchWorkouts() {
+    private func setupFetchedResultsController() {
         let request = NSFetchRequest<Workout>(entityName: "Workout")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Workout.date, ascending: false)]
         
+        workoutsController = NSFetchedResultsController(
+            fetchRequest: request,
+            managedObjectContext: viewContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil
+        )
+        
+        workoutsController?.delegate = self
+    }
+    
+    func fetchWorkouts() {
         do {
-            workouts = try viewContext.fetch(request)
+            try workoutsController?.performFetch()
+            workouts = workoutsController?.fetchedObjects ?? []
         } catch {
             print("Error fetching workouts: \(error)")
         }
@@ -32,7 +47,6 @@ class WorkoutListViewModel: ObservableObject {
         
         do {
             try viewContext.save()
-            fetchWorkouts()
         } catch {
             print("Error deleting workout: \(error)")
         }
@@ -62,5 +76,11 @@ class WorkoutListViewModel: ObservableObject {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+}
+
+extension WorkoutListViewModel: NSFetchedResultsControllerDelegate {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        fetchWorkouts()
     }
 } 

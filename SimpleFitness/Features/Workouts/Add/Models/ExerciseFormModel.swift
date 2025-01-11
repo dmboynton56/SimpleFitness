@@ -1,4 +1,5 @@
 import Foundation
+import CoreData
 
 struct ExerciseFormModel: Identifiable {
     let id: UUID
@@ -7,7 +8,7 @@ struct ExerciseFormModel: Identifiable {
     var reps: Int
     var weight: Double
     
-    init(id: UUID = UUID(), name: String, sets: Int, reps: Int, weight: Double) {
+    init(id: UUID = UUID(), name: String, sets: Int = 1, reps: Int = 0, weight: Double = 0.0) {
         self.id = id
         self.name = name
         self.sets = sets
@@ -17,10 +18,37 @@ struct ExerciseFormModel: Identifiable {
     
     // Convert from CoreData Exercise entity
     init(from entity: Exercise) {
-        self.id = entity.id
-        self.name = entity.name
-        self.sets = Int(entity.sets)
-        self.reps = Int(entity.reps)
-        self.weight = entity.weight
+        self.id = entity.id ?? UUID()
+        self.name = entity.name ?? ""
+        if let sets = entity.sets as? Set<ExerciseSet> {
+            self.sets = sets.count
+            if let firstSet = sets.first {
+                self.reps = Int(firstSet.reps)
+                self.weight = firstSet.weight
+            } else {
+                self.reps = 0
+                self.weight = 0.0
+            }
+        } else {
+            self.sets = 0
+            self.reps = 0
+            self.weight = 0.0
+        }
+    }
+    
+    func toExercise(context: NSManagedObjectContext) -> Exercise {
+        let exercise = Exercise(context: context)
+        exercise.id = id
+        exercise.name = name
+        
+        // Create initial set
+        let set = ExerciseSet(context: context)
+        set.id = UUID()
+        set.reps = Int16(reps)
+        set.weight = weight
+        set.order = 0
+        set.exercise = exercise
+        
+        return exercise
     }
 } 

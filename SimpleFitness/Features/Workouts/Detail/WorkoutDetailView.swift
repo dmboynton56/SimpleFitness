@@ -49,20 +49,26 @@ struct WorkoutDetailView: View {
             if viewModel.workout.type == "Strength" {
                 Section {
                     ForEach(viewModel.exercises) { exercise in
-                        VStack(alignment: .leading) {
-                            Text(exercise.name)
-                                .font(.headline)
-                            HStack {
-                                Text("\(exercise.sets) sets")
-                                Text("•")
-                                Text("\(exercise.reps) reps")
-                                Text("•")
-                                Text(String(format: "%.1f lbs", exercise.weight))
+                        if viewModel.isEditing {
+                            ExerciseEditForm(exercise: exercise) { name, sets, reps, weight in
+                                viewModel.updateExercise(exercise, name: name, sets: sets, reps: reps, weight: weight)
                             }
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        } else {
+                            VStack(alignment: .leading) {
+                                Text(exercise.name)
+                                    .font(.headline)
+                                HStack {
+                                    Text("\(exercise.sets) sets")
+                                    Text("•")
+                                    Text("\(exercise.reps) reps")
+                                    Text("•")
+                                    Text(String(format: "%.1f lbs", exercise.weight))
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            }
+                            .padding(.vertical, 4)
                         }
-                        .padding(.vertical, 4)
                     }
                 } header: {
                     Text("Exercises")
@@ -83,8 +89,10 @@ struct WorkoutDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(viewModel.isEditing ? "Done" : "Edit") {
-                    viewModel.isEditing.toggle()
+                if viewModel.workout.type == "Strength" {
+                    Button(viewModel.isEditing ? "Done" : "Edit") {
+                        viewModel.isEditing.toggle()
+                    }
                 }
             }
         }

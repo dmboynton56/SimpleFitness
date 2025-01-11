@@ -21,6 +21,16 @@ class WorkoutDetailViewModel: ObservableObject {
         }
     }
     
+    func updateExercise(_ exercise: Exercise, name: String, sets: Int, reps: Int, weight: Double) {
+        exercise.name = name
+        exercise.sets = Int16(sets)
+        exercise.reps = Int16(reps)
+        exercise.weight = weight
+        
+        saveChanges()
+        loadExercises() // Reload to reflect any sorting changes
+    }
+    
     func formattedDate() -> String {
         guard let date = workout.date else { return "Unknown Date" }
         let formatter = DateFormatter()

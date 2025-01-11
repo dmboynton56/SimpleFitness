@@ -22,7 +22,7 @@ A simple iOS fitness tracking application that allows users to manually log work
 
 1. Clone the repository
 ```bash
-git clone https://github.com/[your-username]/SimpleFitness.git
+git clone https://github.com/dmboynton56/SimpleFitness.git
 ```
 
 2. Open the project in Xcode

@@ -46,42 +46,53 @@ The project follows the MVVM (Model-View-ViewModel) architecture pattern and is 
 SimpleFitness/
 ├── App/
 │   └── SimpleFitnessApp.swift
+├── Assets.xcassets/
 ├── Core/
 │   ├── Models/
-│   │   ├── SimpleFitnessModel.xcdatamodeld
+│   │   ├── SimpleFitnessModel.xcdatamodeld/
+│   │   ├── Exercise.swift
 │   │   ├── Workout+CoreDataClass.swift
-│   │   ├── Exercise+CoreDataClass.swift
-│   │   ├── Workout+CoreDataProperties.swift
-│   │   └── Exercise+CoreDataProperties.swift
+│   │   └── Workout+CoreDataProperties.swift
 │   └── Services/
 │       ├── LocationManager.swift
-│       └── PersistenceController.swift
+│       └── Persistence.swift
 ├── Features/
-│   ├── Workouts/
-│   │   ├── Add/
-│   │   │   ├── AddWorkoutView.swift
-│   │   │   ├── AddWorkoutViewModel.swift
-│   │   │   ├── Components/
-│   │   │   │   ├── WorkoutTypeSelectionView.swift
-│   │   │   │   ├── StrengthWorkoutForm.swift
-│   │   │   │   ├── CardioWorkoutForm.swift
-│   │   │   │   └── ActiveWorkoutView.swift
-│   │   │   └── Models/
-│   │   │       ├── ExerciseFormModel.swift
-│   │   │       └── WorkoutFormModel.swift
-│   │   ├── List/
-│   │   │   ├── WorkoutListView.swift
-│   │   │   └── WorkoutListViewModel.swift
-│   │   └── Detail/
-│   │       ├── WorkoutDetailView.swift
-│   │       └── WorkoutDetailViewModel.swift
-│   │       └── Components/
-│   │           └── ExerciseEditForm.swift
-├── Views/
-│   └── NumberField.swift
-└── Resources/
-    ├── Info.plist
-    └── Assets.xcassets
+│   ├── Profile/
+│   ├── Settings/
+│   └── Workouts/
+│       ├── Add/
+│       │   ├── AddWorkoutView.swift
+│       │   ├── AddWorkoutViewModel.swift
+│       │   ├── Components/
+│       │   │   ├── WorkoutTypeSelectionView.swift
+│       │   │   ├── StrengthWorkoutForm.swift
+│       │   │   ├── CardioWorkoutForm.swift
+│       │   │   └── ActiveWorkoutView.swift
+│       │   └── Models/
+│       │       ├── ExerciseFormModel.swift
+│       │       └── WorkoutFormModel.swift
+│       ├── Detail/
+│       │   ├── WorkoutDetailView.swift
+│       │   ├── WorkoutDetailViewModel.swift
+│       │   └── Components/
+│       │       └── ExerciseEditForm.swift
+│       ├── List/
+│       │   ├── WorkoutListView.swift
+│       │   └── WorkoutListViewModel.swift
+│       ├── WorkoutListView.swift
+│       └── WorkoutListViewModel.swift
+├── Info.plist
+├── Preview Content/
+├── Resources/
+│   └── Info.plist
+├── Shared/
+├── Utils/
+└── Views/
+    └── NumberField.swift
+
+Tests:
+├── SimpleFitnessTests/
+└── SimpleFitnessUITests/
 ```
 
 ## License

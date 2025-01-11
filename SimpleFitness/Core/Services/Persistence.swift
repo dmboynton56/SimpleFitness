@@ -19,10 +19,7 @@ struct PersistenceController {
             newWorkout.date = Date()
             newWorkout.distance = 0.0
             newWorkout.duration = 0.0
-            newWorkout.reps = 0
-            newWorkout.sets = 0
             newWorkout.type = "Default"
-            newWorkout.weight = 0.0
 
         }
         do {

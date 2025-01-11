@@ -19,10 +19,25 @@ extension Workout: Identifiable {
     @NSManaged public var date: Date?
     @NSManaged public var distance: Double
     @NSManaged public var duration: Double
-    @NSManaged public var reps: Int16
-    @NSManaged public var sets: Int16
-    @NSManaged public var type: String?
-    @NSManaged public var weight: Double
     @NSManaged public var id: UUID?
+    @NSManaged public var notes: String?
+    @NSManaged public var type: String?
+    @NSManaged public var exercises: NSSet?
+}
+
+// MARK: Generated accessors for exercises
+extension Workout {
+
+    @objc(addExercisesObject:)
+    @NSManaged public func addToExercises(_ value: Exercise)
+
+    @objc(removeExercisesObject:)
+    @NSManaged public func removeFromExercises(_ value: Exercise)
+
+    @objc(addExercises:)
+    @NSManaged public func addToExercises(_ values: NSSet)
+
+    @objc(removeExercises:)
+    @NSManaged public func removeFromExercises(_ values: NSSet)
 
 }

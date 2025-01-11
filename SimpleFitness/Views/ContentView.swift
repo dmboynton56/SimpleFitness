@@ -20,16 +20,18 @@ struct ContentView: View {
         NavigationView {
             List {
                 ForEach(workouts) { workout in
-                    if !workout.isDeleted && !workout.isFault { // Safeguard for deleted/faulted objects
-                        NavigationLink {
-                            Text("Workout on \(workout.date ?? Date(), formatter: dateFormatter)")
-                        } label: {
-                            Text(workout.date ?? Date(), formatter: dateFormatter)
-                        }
+                    if workout.isDeleted == false && workout.isFault == false { // Safeguard for deleted/faulted objects
+                        NavigationLink(
+                            destination: Text("Workout on \(workout.date ?? Date(), formatter: dateFormatter)"),
+                            label: {
+                                Text(workout.date ?? Date(), formatter: dateFormatter)
+                            }
+                        )
                     }
                 }
                 .onDelete(perform: deleteWorkouts)
             }
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
@@ -51,10 +53,7 @@ struct ContentView: View {
             newWorkout.date = Date()
             newWorkout.distance = 0.0
             newWorkout.duration = 0.0
-            newWorkout.reps = 0
-            newWorkout.sets = 0
             newWorkout.type = "Default"
-            newWorkout.weight = 0.0
 
             do {
                 try viewContext.save()

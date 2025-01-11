@@ -11,7 +11,7 @@ import CoreData
 @main
 struct SimpleFitnessApp: App {
     let persistenceController = PersistenceController.shared
-    @StateObject private var locationManager = LocationManager()
+    @StateObject private var locationManager = LocationManager.shared
 
     var body: some Scene {
         WindowGroup {

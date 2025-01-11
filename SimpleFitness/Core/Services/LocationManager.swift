@@ -3,13 +3,15 @@ import CoreLocation
 import Combine
 
 class LocationManager: NSObject, ObservableObject {
+    static let shared = LocationManager()
+    
     private let locationManager = CLLocationManager()
     
     @Published var location: CLLocation?
     @Published var isTracking = false
     @Published var error: Error?
     
-    override init() {
+    override private init() {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest

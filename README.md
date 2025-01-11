@@ -42,6 +42,7 @@ The project follows the MVVM (Model-View-ViewModel) architecture pattern and is 
 
 ## File Structure
 
+```
 SimpleFitness/
 ├── App/
 │ └── SimpleFitnessApp.swift
@@ -78,6 +79,7 @@ SimpleFitness/
 | ExerciseEditForm.swift
 ├── Views/
 | NumberField.Swift
+```
 
 ## License
 

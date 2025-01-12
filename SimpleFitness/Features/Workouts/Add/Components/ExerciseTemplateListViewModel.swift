@@ -1,18 +1,16 @@
 import Foundation
 import Combine
-import CoreData
 
 class ExerciseTemplateListViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var showingNewExerciseSheet = false
-    @Published var recentTemplates: [ExerciseTemplate] = []
-    @Published var categorizedTemplates: [String: [ExerciseTemplate]] = [:]
+    @Published private(set) var recentTemplates: [ExerciseTemplate] = []
+    @Published private(set) var categorizedTemplates: [String: [ExerciseTemplate]] = [:]
     
-    private let templateService: ExerciseTemplateService
+    private let templateService = ExerciseTemplateService.shared
     private var cancellables = Set<AnyCancellable>()
     
-    init(templateService: ExerciseTemplateService = .shared) {
-        self.templateService = templateService
+    init() {
         setupSearchSubscription()
         loadTemplates()
     }
@@ -29,31 +27,27 @@ class ExerciseTemplateListViewModel: ObservableObject {
     private func loadTemplates() {
         let templates = templateService.fetchTemplates()
         
-        // Filter templates based on search text
-        let filteredTemplates = searchText.isEmpty ? templates : templates.filter {
-            $0.name?.localizedCaseInsensitiveContains(searchText) == true ||
-            $0.category?.localizedCaseInsensitiveContains(searchText) == true
+        if searchText.isEmpty {
+            // Show recent templates (last 5 used)
+            recentTemplates = Array(templates.prefix(5))
+            
+            // Categorize remaining templates
+            var categorized: [String: [ExerciseTemplate]] = [:]
+            for template in templates.dropFirst(5) {
+                let category = template.category ?? "Uncategorized"
+                categorized[category, default: []].append(template)
+            }
+            categorizedTemplates = categorized
+        } else {
+            // Filter templates by search text
+            let filtered = templates.filter { template in
+                template.name?.localizedCaseInsensitiveContains(searchText) == true ||
+                template.category?.localizedCaseInsensitiveContains(searchText) == true
+            }
+            
+            // Show all filtered templates in recent section
+            recentTemplates = filtered
+            categorizedTemplates = [:]
         }
-        
-        // Get recent templates (used in last 7 days)
-        let calendar = Calendar.current
-        let oneWeekAgo = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        
-        recentTemplates = filteredTemplates.filter {
-            guard let lastUsed = $0.lastUsedDate else { return false }
-            return lastUsed > oneWeekAgo
-        }
-        
-        // Categorize remaining templates
-        var categorized: [String: [ExerciseTemplate]] = [:]
-        
-        for template in filteredTemplates {
-            let category = template.category ?? "Uncategorized"
-            var templatesInCategory = categorized[category] ?? []
-            templatesInCategory.append(template)
-            categorized[category] = templatesInCategory
-        }
-        
-        categorizedTemplates = categorized
     }
 } 

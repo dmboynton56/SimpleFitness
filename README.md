@@ -77,21 +77,18 @@ SimpleFitness/
 │       │   │   ├── ActiveWorkoutView.swift
 │       │   │   ├── ExerciseTemplateList.swift
 │       │   │   ├── ExerciseTemplateListViewModel.swift
-│       │   │   ├── ExerciseTemplateRow.swift
-│       │   │   ├── NewExerciseTemplateSheet.swift
-│       │   │   ├── SetList.swift
-│       │   │   └── SetRow.swift
+│       │   │   └── ExerciseTemplateRow.swift
 │       │   └── Models/
-│       │       ├── ExerciseFormModel.swift
 │       │       └── WorkoutFormModel.swift
 │       ├── Detail/
 │       │   ├── WorkoutDetailView.swift
-│       │   └── WorkoutDetailViewModel.swift
+│       │   ├── WorkoutDetailViewModel.swift
+│       │   └── Components/
+│       │       └── ExerciseEditForm.swift
 │       └── List/
 │           ├── WorkoutListView.swift
 │           └── WorkoutListViewModel.swift
 ├── Info.plist
-├── Preview Content/
 ├── Resources/
 ├── Shared/
 ├── Utils/

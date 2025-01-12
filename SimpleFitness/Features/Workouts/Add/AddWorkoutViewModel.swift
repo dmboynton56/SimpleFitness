@@ -10,7 +10,7 @@ class AddWorkoutViewModel: ObservableObject {
     @Published var notes: String = ""
     
     // Strength workout properties
-    @Published var exercises: [ExerciseFormModel] = []
+    @Published private(set) var exercises: [Exercise] = []
     
     // Cardio workout properties
     @Published var isActiveWorkout = false
@@ -35,14 +35,85 @@ class AddWorkoutViewModel: ObservableObject {
     }
     
     func addExerciseFromTemplate(_ template: ExerciseTemplate) {
-        let exercise = ExerciseFormModel(
-            name: template.name ?? "",
-            sets: 1,
-            reps: 10,
-            weight: 0.0
-        )
+        let exercise = Exercise(context: viewContext)
+        exercise.id = UUID()
+        exercise.name = template.name
+        exercise.template = template
+        
+        // Create default sets
+        for i in 0..<3 {  // Default to 3 sets
+            let set = ExerciseSet(context: viewContext)
+            set.id = UUID()
+            set.reps = 10  // Default to 10 reps
+            set.weight = 0.0
+            set.order = Int16(i)
+            set.exercise = exercise
+        }
+        
         exercises.append(exercise)
         templateService.updateLastUsed(template)
+        
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error saving exercise: \(error)")
+        }
+    }
+    
+    func removeExercises(at offsets: IndexSet) {
+        for index in offsets {
+            let exercise = exercises[index]
+            viewContext.delete(exercise)
+        }
+        exercises.remove(atOffsets: offsets)
+        
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error removing exercises: \(error)")
+        }
+    }
+    
+    // MARK: - Saving Methods
+    
+    func saveWorkout() {
+        let workout = Workout(context: viewContext)
+        workout.id = UUID()
+        workout.date = Date()
+        workout.type = workoutType?.rawValue
+        workout.name = workoutName.isEmpty ? nil : workoutName
+        workout.notes = notes.isEmpty ? nil : notes
+        
+        switch workoutType {
+        case .strength:
+            saveStrengthWorkout(workout)
+        case .running, .biking:
+            saveCardioWorkout(workout)
+        case .none:
+            break
+        }
+        
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error saving workout: \(error)")
+        }
+    }
+    
+    private func saveStrengthWorkout(_ workout: Workout) {
+        // Link existing exercises to workout
+        for exercise in exercises {
+            exercise.workout = workout
+        }
+    }
+    
+    private func saveCardioWorkout(_ workout: Workout) {
+        let totalSeconds = (hours * 3600) + (minutes * 60) + seconds
+        workout.duration = Double(totalSeconds)
+        
+        if let distance = Double(distance) {
+            workout.distance = distance
+        }
     }
     
     // MARK: - Location Tracking
@@ -74,70 +145,6 @@ class AddWorkoutViewModel: ObservableObject {
             let distanceInMeters = newLocation.distance(from: start)
             let distanceInMiles = distanceInMeters / 1609.34
             activeDistance = distanceInMiles
-        }
-    }
-    
-    // MARK: - Strength Workout Methods
-    
-    func addExercise(_ exercise: ExerciseFormModel) {
-        exercises.append(exercise)
-    }
-    
-    func updateExercise(_ exercise: ExerciseFormModel) {
-        if let index = exercises.firstIndex(where: { $0.id == exercise.id }) {
-            exercises[index] = exercise
-        }
-    }
-    
-    func removeExercises(at offsets: IndexSet) {
-        exercises.remove(atOffsets: offsets)
-    }
-    
-    // MARK: - Saving Methods
-    
-    func saveWorkout() {
-        let workout = Workout(context: viewContext)
-        workout.id = UUID()
-        workout.date = Date()
-        workout.type = workoutType?.rawValue
-        workout.name = workoutName.isEmpty ? nil : workoutName
-        workout.notes = notes.isEmpty ? nil : notes
-        
-        switch workoutType {
-        case .strength:
-            saveStrengthWorkout(workout)
-        case .running, .biking:
-            saveCardioWorkout(workout)
-        case .none:
-            break
-        }
-        
-        do {
-            try viewContext.save()
-        } catch {
-            print("Error saving workout: \(error)")
-        }
-    }
-    
-    private func saveStrengthWorkout(_ workout: Workout) {
-        exercises.forEach { exerciseForm in
-            let exercise = exerciseForm.toExercise(context: viewContext)
-            exercise.workout = workout
-            
-            // Find and link template
-            if let template = templateService.findTemplate(named: exercise.name) {
-                exercise.template = template
-                templateService.updateLastUsed(template)
-            }
-        }
-    }
-    
-    private func saveCardioWorkout(_ workout: Workout) {
-        let totalSeconds = (hours * 3600) + (minutes * 60) + seconds
-        workout.duration = Double(totalSeconds)
-        
-        if let distance = Double(distance) {
-            workout.distance = distance
         }
     }
 }

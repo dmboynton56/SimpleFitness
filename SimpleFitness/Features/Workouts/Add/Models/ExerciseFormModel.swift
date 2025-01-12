@@ -41,13 +41,15 @@ struct ExerciseFormModel: Identifiable {
         exercise.id = id
         exercise.name = name
         
-        // Create initial set
-        let set = ExerciseSet(context: context)
-        set.id = UUID()
-        set.reps = Int16(reps)
-        set.weight = weight
-        set.order = 0
-        set.exercise = exercise
+        // Create all sets
+        for i in 0..<sets {
+            let set = ExerciseSet(context: context)
+            set.id = UUID()
+            set.reps = Int16(reps)
+            set.weight = weight
+            set.order = Int16(i)
+            set.exercise = exercise
+        }
         
         return exercise
     }

@@ -1,5 +1,4 @@
 import SwiftUI
-import CoreData
 
 struct ExerciseTemplateRow: View {
     let template: ExerciseTemplate
@@ -7,15 +6,19 @@ struct ExerciseTemplateRow: View {
     
     var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(template.name ?? "")
-                    .font(.body)
+                    .font(.headline)
+                
                 if let category = template.category {
                     Text(category)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 } 

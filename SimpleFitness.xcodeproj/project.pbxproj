@@ -36,9 +36,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/Models/SimpleFitnessModel.xcdatamodeld,
-				Features/Workouts/Add/Components/ExerciseSelector/ExerciseTemplateList.swift,
-				Features/Workouts/Add/Components/ExerciseSelector/ExerciseTemplateListViewModel.swift,
-				Features/Workouts/Add/Components/ExerciseSelector/ExerciseTemplateRow.swift,
 				Features/Workouts/Add/Components/ExerciseSets/SetList.swift,
 				Features/Workouts/Add/Components/ExerciseSets/SetRow.swift,
 				Features/Workouts/WorkoutListView.swift,

@@ -10,7 +10,7 @@ struct StrengthWorkoutForm: View {
             VStack(spacing: 16) {
                 Section {
                     ForEach(viewModel.exercises) { exercise in
-                        SetList(exercise: exercise.toExercise(context: viewModel.viewContext))
+                        SetList(exercise: exercise)
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(10)
                     }
@@ -48,9 +48,9 @@ struct StrengthWorkoutForm: View {
         }
         .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $showingExerciseSelector) {
-            ExerciseTemplateList { template in
+            ExerciseTemplateList(onSelectTemplate: { template in
                 viewModel.addExerciseFromTemplate(template)
-            }
+            })
         }
     }
 } 

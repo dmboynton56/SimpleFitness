@@ -9,6 +9,10 @@ A simple fitness tracking application that allows users to manually log workouts
 - Improved UI layout and spacing for better readability
 - Fixed exercise set editing and validation
 
+## In Progress
+
+🚧 **Map Visualization**: Adding route tracking and visualization for cardio workouts (running/biking)
+
 ## Features
 
 - Manual workout entry with sets and reps

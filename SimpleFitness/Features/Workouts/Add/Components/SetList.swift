@@ -5,74 +5,75 @@ struct SetList: View {
     @ObservedObject var exercise: Exercise
     @Environment(\.managedObjectContext) private var viewContext
     
+    private var orderedSets: [ExerciseSet] {
+        // Sort by order ascending so newer sets appear at the bottom
+        exercise.setsArray.sorted { $0.order < $1.order }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(exercise.name ?? "")
                 .font(.headline)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 16)
             
             VStack(spacing: 12) {
                 ForEach(orderedSets) { set in
-                    SetRow(set: set) { updatedSet in
-                        updateSet(updatedSet)
-                    } onDelete: {
-                        deleteSet(set)
+                    VStack {
+                        SetRow(
+                            set: set,
+                            onUpdate: { reps, weight in
+                                updateSet(set, reps: reps, weight: weight)
+                            },
+                            onDelete: {
+                                deleteSet(set)
+                            }
+                        )
+                        .padding(.horizontal, 16)
+                        
+                        Divider()
+                            .padding(.horizontal, 8)
                     }
-                    Divider()
                 }
             }
             
             Button(action: addSet) {
                 Label("Add Set", systemImage: "plus.circle")
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 16)
         }
         .padding(.vertical, 12)
-    }
-    
-    private var orderedSets: [ExerciseSet] {
-        // Sort by order ascending so newer sets appear at the bottom
-        exercise.setsArray.sorted { $0.order < $1.order }
     }
     
     private func addSet() {
         let set = ExerciseSet(context: viewContext)
         set.id = UUID()
+        set.order = Int16(orderedSets.count)
+        set.reps = 0
+        set.weight = 0.0
         set.exercise = exercise
         
-        // Copy values from last set if it exists
-        if let lastSet = orderedSets.last {
-            set.reps = lastSet.reps
-            set.weight = lastSet.weight
-        } else {
-            set.reps = 0
-            set.weight = 0.0
-        }
-        
-        // Add to end of list
-        set.order = Int16(orderedSets.count)
-        
-        saveContext()
+        saveChanges()
     }
     
-    private func updateSet(_ set: ExerciseSet) {
-        // Ensure changes are saved immediately
-        saveContext()
+    private func updateSet(_ set: ExerciseSet, reps: Int, weight: Double) {
+        set.reps = Int16(reps)
+        set.weight = weight
+        saveChanges()
     }
     
     private func deleteSet(_ set: ExerciseSet) {
         viewContext.delete(set)
-        saveContext()
         
-        // Update order of remaining sets
-        let remainingSets = orderedSets
+        // Reorder remaining sets
+        let remainingSets = orderedSets.filter { $0 != set }
         for (index, set) in remainingSets.enumerated() {
             set.order = Int16(index)
         }
-        saveContext()
+        
+        saveChanges()
     }
     
-    private func saveContext() {
+    private func saveChanges() {
         do {
             try viewContext.save()
         } catch {

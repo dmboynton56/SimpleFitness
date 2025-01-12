@@ -3,6 +3,7 @@ import SwiftUI
 struct WorkoutDetailView: View {
     @StateObject private var viewModel: WorkoutDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showingExerciseSelector = false
     
     init(workout: Workout) {
         _viewModel = StateObject(wrappedValue: WorkoutDetailViewModel(workout: workout))
@@ -64,24 +65,32 @@ struct WorkoutDetailView: View {
                 Section {
                     ForEach(viewModel.exercises) { exercise in
                         if viewModel.isEditing {
-                            ExerciseEditForm(exercise: exercise) { name, reps, weight in
-                                viewModel.updateExercise(exercise, name: name, reps: reps, weight: weight)
-                            }
-                        } else {
-                            VStack(alignment: .leading) {
-                                Text(exercise.name ?? "")
-                                    .font(.headline)
-                                if let sets = exercise.sets as? Set<ExerciseSet>, let firstSet = sets.first {
-                                    HStack {
-                                        Text("\(firstSet.reps) reps")
-                                        Text("•")
-                                        Text(String(format: "%.1f lbs", firstSet.weight))
-                                    }
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                            ExerciseEditForm(
+                                exercise: exercise,
+                                onSave: { name, sets in
+                                    viewModel.updateExercise(exercise, name: name, sets: sets)
+                                },
+                                onAddSet: {
+                                    viewModel.addSetToExercise(exercise)
+                                },
+                                onRemoveSet: { index in
+                                    viewModel.removeSetFromExercise(exercise, at: index)
+                                },
+                                onRemoveExercise: {
+                                    viewModel.removeExercise(exercise)
                                 }
+                            )
+                        } else {
+                            ExerciseSetList(exercise: exercise)
+                        }
+                    }
+                    
+                    if viewModel.isEditing {
+                        Button(action: { showingExerciseSelector = true }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Exercise")
                             }
-                            .padding(.vertical, 4)
                         }
                     }
                 } header: {
@@ -90,13 +99,19 @@ struct WorkoutDetailView: View {
             }
             
             // Notes Section
-            if let notes = viewModel.workout.notes, !notes.isEmpty {
-                Section {
+            Section {
+                if viewModel.isEditing {
+                    TextField("Notes", text: Binding(
+                        get: { viewModel.workout.notes ?? "" },
+                        set: { viewModel.updateWorkoutNotes($0) }
+                    ), axis: .vertical)
+                    .lineLimit(3...6)
+                } else if let notes = viewModel.workout.notes, !notes.isEmpty {
                     Text(notes)
                         .foregroundColor(.secondary)
-                } header: {
-                    Text("Notes")
                 }
+            } header: {
+                Text("Notes")
             }
         }
         .navigationTitle(viewModel.workout.type ?? "Workout")
@@ -107,6 +122,14 @@ struct WorkoutDetailView: View {
                     Button(viewModel.isEditing ? "Done" : "Edit") {
                         viewModel.isEditing.toggle()
                     }
+                }
+            }
+        }
+        .sheet(isPresented: $showingExerciseSelector) {
+            NavigationView {
+                ExerciseTemplateList { template in
+                    viewModel.addExerciseFromTemplate(template)
+                    showingExerciseSelector = false
                 }
             }
         }

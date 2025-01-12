@@ -30,20 +30,43 @@ class WorkoutDetailViewModel: ObservableObject {
         saveChanges()
     }
     
-    func updateExercise(_ exercise: Exercise, name: String, reps: Int16, weight: Double) {
+    func updateWorkoutNotes(_ notes: String) {
+        workout.notes = notes.isEmpty ? nil : notes
+        saveChanges()
+    }
+    
+    func updateExercise(_ exercise: Exercise, name: String, sets: [(reps: Int16, weight: Double)]) {
         exercise.name = name
         
-        // Update the first set or create one if it doesn't exist
-        if let sets = exercise.sets as? Set<ExerciseSet>, let firstSet = sets.first {
-            firstSet.reps = reps
-            firstSet.weight = weight
-        } else {
-            let set = ExerciseSet(context: viewContext)
-            set.id = UUID()
-            set.exercise = exercise
-            set.order = 0
-            set.reps = reps
-            set.weight = weight
+        // Update existing sets or create new ones
+        let existingSets = exercise.sets as? Set<ExerciseSet> ?? Set()
+        
+        // Delete any extra sets
+        if existingSets.count > sets.count {
+            let orderedSets = existingSets.sorted { $0.order < $1.order }
+            for set in orderedSets[sets.count...] {
+                viewContext.delete(set)
+            }
+        }
+        
+        // Update or create sets
+        for (index, setData) in sets.enumerated() {
+            let orderedSets = existingSets.sorted { $0.order < $1.order }
+            let set: ExerciseSet
+            
+            if index < orderedSets.count {
+                // Update existing set
+                set = orderedSets[index]
+            } else {
+                // Create new set
+                set = ExerciseSet(context: viewContext)
+                set.id = UUID()
+                set.exercise = exercise
+            }
+            
+            set.order = Int16(index)
+            set.reps = setData.reps
+            set.weight = setData.weight
         }
         
         saveChanges()
@@ -69,11 +92,77 @@ class WorkoutDetailViewModel: ObservableObject {
         return String(format: "%.2f miles", workout.distance)
     }
     
-    func saveChanges() {
+    private func saveChanges() {
         do {
             try viewContext.save()
+            loadExercises()  // Reload exercises after saving
         } catch {
             print("Error saving workout changes: \(error)")
         }
+    }
+    
+    func addExerciseFromTemplate(_ template: ExerciseTemplate) {
+        let exercise = Exercise(context: viewContext)
+        exercise.id = UUID()
+        exercise.name = template.name
+        exercise.workout = workout
+        
+        // Create default set
+        let set = ExerciseSet(context: viewContext)
+        set.id = UUID()
+        set.order = 0
+        set.reps = 0
+        set.weight = 0
+        set.exercise = exercise
+        
+        saveChanges()
+    }
+    
+    func removeExercise(_ exercise: Exercise) {
+        viewContext.delete(exercise)
+        saveChanges()
+    }
+    
+    func addSetToExercise(_ exercise: Exercise) {
+        print("ViewModel: Adding set to exercise \(exercise.name ?? "")")
+        guard let existingSets = exercise.sets as? Set<ExerciseSet> else {
+            print("ViewModel: Failed to get existing sets")
+            return
+        }
+        
+        let set = ExerciseSet(context: viewContext)
+        set.id = UUID()
+        set.order = Int16(existingSets.count)
+        set.reps = 0
+        set.weight = 0
+        set.exercise = exercise
+        
+        saveChanges()
+        print("ViewModel: Successfully added set")
+    }
+    
+    func removeSetFromExercise(_ exercise: Exercise, at index: Int) {
+        print("ViewModel: Removing set \(index) from exercise \(exercise.name ?? "")")
+        guard let sets = exercise.sets as? Set<ExerciseSet> else {
+            print("ViewModel: Failed to get existing sets")
+            return
+        }
+        let orderedSets = sets.sorted { $0.order < $1.order }
+        
+        guard index < orderedSets.count else {
+            print("ViewModel: Invalid set index")
+            return
+        }
+        
+        // Delete the set
+        viewContext.delete(orderedSets[index])
+        
+        // Reorder remaining sets
+        for i in (index + 1)..<orderedSets.count {
+            orderedSets[i].order = Int16(i - 1)
+        }
+        
+        saveChanges()
+        print("ViewModel: Successfully removed set")
     }
 } 

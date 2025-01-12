@@ -1,6 +1,13 @@
 # SimpleFitness
 
-A simple iOS fitness tracking application that allows users to manually log workouts with sets, reps, and weights. The app also includes optional GPS tracking for running and biking activities.
+A simple fitness tracking application that allows users to manually log workouts with sets, reps, and weights. Includes optional GPS tracking for running and biking activities.
+
+## Recent Updates
+
+- Enhanced input field management with improved keyboard handling
+- Streamlined exercise and set management with immediate data persistence
+- Improved UI layout and spacing for better readability
+- Fixed exercise set editing and validation
 
 ## Features
 
@@ -9,97 +16,36 @@ A simple iOS fitness tracking application that allows users to manually log work
 - Duration and distance logging
 - Optional GPS tracking for outdoor activities
 - Workout history viewing
-- Exercise templates and categorization
-- Set grouping by weight
+- Immediate data persistence
+- Intuitive keyboard management
+- Clean, consistent UI layout
 
-## Requirements
+## Development
 
-- iOS 15.0+
-- Xcode 13.0+
-- Swift 5.5+
+### Requirements
+- iOS 17.0+
+- Xcode 15.0+
+- Swift 5.9+
 
-## Installation
-
+### Setup
 1. Clone the repository
-```bash
-git clone https://github.com/dmboynton56/SimpleFitness.git
-```
+2. Open SimpleFitness.xcodeproj in Xcode
+3. Build and run
 
-2. Open the project in Xcode
-```bash
-cd SimpleFitness
-open SimpleFitness.xcodeproj
-```
+### Architecture
+- SwiftUI for UI
+- CoreData for persistence
+- MVVM architecture
+- Modular components for reusability
 
-3. Build and run the project in Xcode
+### Key Components
+- `NumberField`: Reusable numeric input with validation
+- `ExerciseEditForm`: Centralized exercise management
+- `SetList` & `SetRow`: Exercise set management with proper layout
+- Focus state management for improved input handling
 
-## Architecture
-
-The project follows the MVVM (Model-View-ViewModel) architecture pattern and is organized into the following structure:
-
-- **App**: Contains app-level files and entry points
-- **Core**: Contains core models and services
-- **Features**: Contains feature-specific views and view models
-- **Shared**: Contains shared components and utilities
-
-## File Structure
-
-```
-SimpleFitness/
-├── App/
-│   └── SimpleFitnessApp.swift
-├── Assets.xcassets/
-├── Core/
-│   ├── Models/
-│   │   ├── SimpleFitnessModel.xcdatamodeld/
-│   │   ├── Exercise.swift
-│   │   ├── ExerciseTemplate+CoreDataClass.swift
-│   │   ├── ExerciseTemplate+CoreDataProperties.swift
-│   │   ├── ExerciseSet+CoreDataClass.swift
-│   │   ├── ExerciseSet+CoreDataProperties.swift
-│   │   ├── Workout+CoreDataClass.swift
-│   │   └── Workout+CoreDataProperties.swift
-│   └── Services/
-│       ├── LocationManager.swift
-│       ├── Persistence.swift
-│       └── ExerciseTemplateService.swift
-├── Features/
-│   ├── Profile/
-│   ├── Settings/
-│   └── Workouts/
-│       ├── Add/
-│       │   ├── AddWorkoutView.swift
-│       │   ├── AddWorkoutViewModel.swift
-│       │   ├── Components/
-│       │   │   ├── WorkoutTypeSelectionView.swift
-│       │   │   ├── StrengthWorkoutForm.swift
-│       │   │   ├── CardioWorkoutForm.swift
-│       │   │   ├── ActiveWorkoutView.swift
-│       │   │   ├── ExerciseTemplateList.swift
-│       │   │   ├── ExerciseTemplateListViewModel.swift
-│       │   │   └── ExerciseTemplateRow.swift
-│       │   └── Models/
-│       │       └── WorkoutFormModel.swift
-│       ├── Detail/
-│       │   ├── WorkoutDetailView.swift
-│       │   ├── WorkoutDetailViewModel.swift
-│       │   └── Components/
-│       │       └── ExerciseEditForm.swift
-│       └── List/
-│           ├── WorkoutListView.swift
-│           └── WorkoutListViewModel.swift
-├── Info.plist
-├── Resources/
-├── Shared/
-├── Utils/
-└── Views/
-    └── NumberField.swift
-
-Tests:
-├── SimpleFitnessTests/
-└── SimpleFitnessUITests/
-```
+## Contributing
+Feel free to submit issues and pull requests.
 
 ## License
-
-This project is licensed under the MIT License - see the LICENSE file for details 
+MIT License - see LICENSE file for details 

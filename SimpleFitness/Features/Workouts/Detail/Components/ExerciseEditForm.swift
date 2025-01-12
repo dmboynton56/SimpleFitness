@@ -2,53 +2,153 @@ import SwiftUI
 
 struct ExerciseEditForm: View {
     let exercise: Exercise
-    let onSave: (String, Int16, Double) -> Void
+    let onSave: (String, [(reps: Int16, weight: Double)]) -> Void
+    let onAddSet: () -> Void
+    let onRemoveSet: (Int) -> Void
+    let onRemoveExercise: () -> Void
     
     @State private var name: String
-    @State private var reps: String
-    @State private var weight: String
+    @FocusState private var focusedField: Field?
     
-    init(exercise: Exercise, onSave: @escaping (String, Int16, Double) -> Void) {
+    private enum Field: Hashable {
+        case name
+        case reps(Int)
+        case weight(Int)
+    }
+    
+    private var orderedSets: [ExerciseSet] {
+        guard let sets = exercise.sets as? Set<ExerciseSet> else { return [] }
+        return sets.sorted { $0.order < $1.order }
+    }
+    
+    init(
+        exercise: Exercise,
+        onSave: @escaping (String, [(reps: Int16, weight: Double)]) -> Void,
+        onAddSet: @escaping () -> Void,
+        onRemoveSet: @escaping (Int) -> Void,
+        onRemoveExercise: @escaping () -> Void
+    ) {
         self.exercise = exercise
         self.onSave = onSave
+        self.onAddSet = onAddSet
+        self.onRemoveSet = onRemoveSet
+        self.onRemoveExercise = onRemoveExercise
         
-        // Initialize with default values if nil
         _name = State(initialValue: exercise.name ?? "")
-        
-        // Get the first set's values or defaults
-        let firstSet = (exercise.sets as? Set<ExerciseSet>)?.first
-        _reps = State(initialValue: String(firstSet?.reps ?? 0))
-        _weight = State(initialValue: String(format: "%.1f", firstSet?.weight ?? 0.0))
     }
     
     var body: some View {
-        VStack(spacing: 12) {
-            TextField("Exercise Name", text: $name)
-                .font(.headline)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onChange(of: name) { oldValue, newValue in
-                    saveChanges()
-                }
-            
-            HStack {
-                NumberField(label: "Reps", value: $reps, range: 1...99) {
-                    saveChanges()
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            // Exercise Header
+            HStack(spacing: 8) {
+                TextField("Exercise Name", text: $name)
+                    .font(.headline)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .focused($focusedField, equals: .name)
+                    .onChange(of: name) { oldValue, newValue in
+                        saveChanges()
+                    }
                 
-                NumberField(label: "Weight", value: $weight, range: 0...999.9) {
-                    saveChanges()
+                Button(role: .destructive) {
+                    print("Delete exercise tapped")
+                    onRemoveExercise()
+                } label: {
+                    Image(systemName: "trash")
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+            }
+            
+            // Sets List
+            VStack(spacing: 8) {
+                ForEach(orderedSets) { set in
+                    HStack(spacing: 8) {
+                        Text("Set \(set.order + 1)")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 60, alignment: .leading)
+                        
+                        NumberField(
+                            label: "Reps",
+                            value: Binding(
+                                get: { String(set.reps) },
+                                set: { newValue in
+                                    if let reps = Int16(newValue) {
+                                        set.reps = reps
+                                        saveChanges()
+                                    }
+                                }
+                            ),
+                            range: 1...99,
+                            onUpdate: { saveChanges() }
+                        )
+                        .focused($focusedField, equals: .reps(Int(set.order)))
+                        
+                        NumberField(
+                            label: "Weight",
+                            value: Binding(
+                                get: { String(format: "%.1f", set.weight) },
+                                set: { newValue in
+                                    if let weight = Double(newValue) {
+                                        set.weight = weight
+                                        saveChanges()
+                                    }
+                                }
+                            ),
+                            range: 0...999.9,
+                            onUpdate: { saveChanges() }
+                        )
+                        .focused($focusedField, equals: .weight(Int(set.order)))
+                        
+                        Button(role: .destructive) {
+                            print("Remove set \(set.order) tapped")
+                            withAnimation {
+                                onRemoveSet(Int(set.order))
+                            }
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    .padding(.vertical, 4)
+                    .background(Color.clear)
+                }
+            }
+            
+            // Add Set Button
+            Button {
+                print("Add set tapped")
+                withAnimation {
+                    onAddSet()
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add Set")
+                }
+                .frame(height: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .padding(.top, 4)
+        }
+        .padding(.vertical, 4)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
                 }
             }
         }
-        .padding(.vertical, 4)
     }
     
     private func saveChanges() {
-        guard let repsNum = Int16(reps),
-              let weightNum = Double(weight) else {
-            return
+        let sets = orderedSets.map { set in
+            (reps: set.reps, weight: set.weight)
         }
-        
-        onSave(name, repsNum, weightNum)
+        onSave(name, sets)
     }
 } 

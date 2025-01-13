@@ -11,5 +11,9 @@ extension StrengthProgress {
     @NSManaged public var maxReps: Int16
     @NSManaged public var maxWeight: Double
     @NSManaged public var oneRepMax: Double
+    @NSManaged public var totalSets: Int16
+    @NSManaged public var totalVolume: Double
+    @NSManaged public var averageWeight: Double
     @NSManaged public var exercise: Exercise?
+    @NSManaged public var exerciseTemplate: ExerciseTemplate?
 } 

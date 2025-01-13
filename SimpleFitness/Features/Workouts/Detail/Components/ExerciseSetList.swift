@@ -10,8 +10,21 @@ struct ExerciseSetList: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(exercise.name ?? "")
-                .font(.headline)
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(exercise.name ?? "")
+                        .font(.headline)
+                    if let category = exercise.template?.category {
+                        Text(category)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chart.xyaxis.line")
+                    .foregroundStyle(.blue)
+                    .font(.caption)
+            }
             
             ForEach(orderedSets, id: \.id) { set in
                 HStack {
@@ -25,7 +38,15 @@ struct ExerciseSetList: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             }
+            
+            if orderedSets.isEmpty {
+                Text("No sets recorded")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .italic()
+            }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
     }
 } 

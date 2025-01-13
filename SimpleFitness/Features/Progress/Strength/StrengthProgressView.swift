@@ -39,7 +39,7 @@ struct StrengthProgressView: View {
                     action: { viewModel.selectedCategory = nil }
                 )
                 
-                ForEach(viewModel.categories, id: \.self) { category in
+                ForEach(viewModel.categories as [String], id: \.self) { category in
                     CategoryButton(
                         title: category,
                         isSelected: viewModel.selectedCategory == category,
@@ -53,7 +53,7 @@ struct StrengthProgressView: View {
     
     private var exerciseList: some View {
         LazyVStack(spacing: 16) {
-            ForEach(viewModel.filteredTemplates) { template in
+            ForEach(viewModel.filteredTemplates as [ExerciseTemplate]) { template in
                 ExerciseProgressCard(
                     template: template,
                     latestProgress: viewModel.getLatestProgress(for: template),

@@ -1,7 +1,7 @@
 import Foundation
 import CoreData
 
-extension ExerciseTemplate {
+extension ExerciseTemplate: Identifiable {
     @nonobjc public class func fetchRequest() -> NSFetchRequest<ExerciseTemplate> {
         return NSFetchRequest<ExerciseTemplate>(entityName: "ExerciseTemplate")
     }

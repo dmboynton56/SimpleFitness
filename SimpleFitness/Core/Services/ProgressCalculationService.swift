@@ -4,137 +4,111 @@ import CoreData
 class ProgressCalculationService {
     static let shared = ProgressCalculationService()
     
-    private let context: NSManagedObjectContext
+    private let viewContext: NSManagedObjectContext
     
-    private init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
-        self.context = context
+    init(viewContext: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
+        self.viewContext = viewContext
     }
     
-    // MARK: - Strength Progress
-    
-    func updateStrengthProgress(for exercise: Exercise) {
-        // Create new progress entry
-        let progress = StrengthProgress.create(in: context)
-        progress.exercise = exercise
-        
-        // Process all sets to find maxes
-        if let sets = exercise.sets as? Set<ExerciseSet> {
-            for set in sets {
-                progress.updateFromSet(set)
-            }
-        }
-        
-        // Create or update template metrics
-        if let template = exercise.template {
-            updateProgressMetrics(for: template, from: progress)
-        }
-        
-        saveContext()
-    }
-    
-    // MARK: - Cardio Progress
-    
-    func updateCardioProgress(for route: Route) {
-        // Create new progress entry
-        let progress = CardioProgress.create(in: context)
-        progress.route = route
-        progress.updateFromRoute(route)
-        
-        saveContext()
-    }
-    
-    // MARK: - Progress Metrics
-    
-    private func updateProgressMetrics(for template: ExerciseTemplate, from progress: StrengthProgress) {
-        // Update one rep max metric
-        updateMetric(for: template, type: .oneRepMax, value: progress.oneRepMax)
-        
-        // Update max weight metric
-        updateMetric(for: template, type: .maxWeight, value: progress.maxWeight)
-        
-        // Update max reps metric
-        updateMetric(for: template, type: .maxReps, value: Double(progress.maxReps))
-    }
-    
-    private func updateMetric(for template: ExerciseTemplate, type: MetricType, value: Double) {
-        // Fetch existing metric of this type if it exists
-        let request = ProgressMetric.fetchRequest()
-        request.predicate = NSPredicate(format: "template == %@ AND type == %@", template, type.rawValue)
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \ProgressMetric.value, ascending: false)]
+    func getLatestStrengthProgress(for template: ExerciseTemplate) -> StrengthProgress? {
+        let request = Exercise.fetchRequest()
+        request.predicate = NSPredicate(format: "template == %@", template)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Exercise.workout?.date, ascending: false)]
         request.fetchLimit = 1
         
         do {
-            let existingMetrics = try context.fetch(request)
+            guard let lastExercise = try viewContext.fetch(request).first,
+                  let sets = lastExercise.sets as? Set<ExerciseSet> else {
+                return nil
+            }
             
-            // Only create new metric if value is higher than existing
-            if let existing = existingMetrics.first {
-                if value > existing.value {
-                    createNewMetric(for: template, type: type, value: value)
-                }
-            } else {
-                createNewMetric(for: template, type: type, value: value)
+            let progress = StrengthProgress(context: viewContext)
+            progress.date = lastExercise.workout?.date
+            progress.exerciseTemplate = template
+            
+            // Calculate metrics
+            let sortedSets = sets.sorted { $0.order < $1.order }
+            progress.maxWeight = sortedSets.map { $0.weight }.max() ?? 0
+            progress.maxReps = sortedSets.map { $0.reps }.max() ?? 0
+            progress.totalSets = Int16(sets.count)
+            progress.totalVolume = sortedSets.reduce(0) { $0 + ($1.weight * Double($1.reps)) }
+            progress.averageWeight = sortedSets.map { $0.weight }.reduce(0, +) / Double(sets.count)
+            
+            // Calculate one rep max using Brzycki formula
+            if let bestSet = sortedSets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
+                progress.oneRepMax = bestSet.weight * (36 / (37 - Double(bestSet.reps)))
             }
+            
+            return progress
         } catch {
-            print("Error fetching metrics: \(error)")
-        }
-    }
-    
-    private func createNewMetric(for template: ExerciseTemplate, type: MetricType, value: Double) {
-        let metric = ProgressMetric.create(in: context, type: type)
-        metric.value = value
-        metric.template = template
-    }
-    
-    // MARK: - Fetching Progress
-    
-    func fetchStrengthProgress(for exercise: Exercise) -> [StrengthProgress] {
-        let request = StrengthProgress.fetchRequest()
-        request.predicate = NSPredicate(format: "exercise == %@", exercise)
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \StrengthProgress.date, ascending: true)]
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            print("Error fetching strength progress: \(error)")
-            return []
-        }
-    }
-    
-    func fetchCardioProgress(for workout: Workout) -> CardioProgress? {
-        guard let route = workout.route else { return nil }
-        
-        let request = CardioProgress.fetchRequest()
-        request.predicate = NSPredicate(format: "route == %@", route)
-        request.fetchLimit = 1
-        
-        do {
-            return try context.fetch(request).first
-        } catch {
-            print("Error fetching cardio progress: \(error)")
+            print("Error fetching latest progress: \(error)")
             return nil
         }
     }
     
-    func fetchProgressMetrics(for template: ExerciseTemplate, type: MetricType) -> [ProgressMetric] {
-        let request = ProgressMetric.fetchRequest()
-        request.predicate = NSPredicate(format: "template == %@ AND type == %@", template, type.rawValue)
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \ProgressMetric.date, ascending: true)]
+    func getProgressMetrics(for template: ExerciseTemplate) -> [ProgressMetric] {
+        let request = Exercise.fetchRequest()
+        request.predicate = NSPredicate(format: "template == %@", template)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Exercise.workout?.date, ascending: true)]
         
         do {
-            return try context.fetch(request)
+            let exercises = try viewContext.fetch(request)
+            var metrics: [ProgressMetric] = []
+            
+            for exercise in exercises {
+                guard let date = exercise.workout?.date,
+                      let sets = exercise.sets as? Set<ExerciseSet> else { continue }
+                
+                let sortedSets = sets.sorted { $0.order < $1.order }
+                
+                // Max weight metric
+                if let maxWeight = sortedSets.map({ $0.weight }).max() {
+                    let metric = ProgressMetric(context: viewContext)
+                    metric.date = date
+                    metric.type = MetricType.maxWeight.rawValue
+                    metric.value = maxWeight
+                    metrics.append(metric)
+                }
+                
+                // Max reps metric
+                if let maxReps = sortedSets.map({ Double($0.reps) }).max() {
+                    let metric = ProgressMetric(context: viewContext)
+                    metric.date = date
+                    metric.type = MetricType.maxReps.rawValue
+                    metric.value = maxReps
+                    metrics.append(metric)
+                }
+                
+                // One rep max metric
+                if let bestSet = sortedSets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
+                    let metric = ProgressMetric(context: viewContext)
+                    metric.date = date
+                    metric.type = MetricType.oneRepMax.rawValue
+                    metric.value = bestSet.weight * (36 / (37 - Double(bestSet.reps)))
+                    metrics.append(metric)
+                }
+                
+                // Total volume metric
+                let totalVolume = sortedSets.reduce(0.0) { $0 + ($1.weight * Double($1.reps)) }
+                let volumeMetric = ProgressMetric(context: viewContext)
+                volumeMetric.date = date
+                volumeMetric.type = MetricType.totalVolume.rawValue
+                volumeMetric.value = totalVolume
+                metrics.append(volumeMetric)
+                
+                // Average weight metric
+                let avgWeight = sortedSets.map { $0.weight }.reduce(0, +) / Double(sets.count)
+                let avgMetric = ProgressMetric(context: viewContext)
+                avgMetric.date = date
+                avgMetric.type = MetricType.averageWeight.rawValue
+                avgMetric.value = avgWeight
+                metrics.append(avgMetric)
+            }
+            
+            return metrics
         } catch {
             print("Error fetching progress metrics: \(error)")
             return []
-        }
-    }
-    
-    // MARK: - Utilities
-    
-    private func saveContext() {
-        do {
-            try context.save()
-        } catch {
-            print("Error saving progress: \(error)")
         }
     }
 } 

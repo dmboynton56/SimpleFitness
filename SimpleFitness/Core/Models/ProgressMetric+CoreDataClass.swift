@@ -10,13 +10,4 @@ public class ProgressMetric: NSManagedObject, Identifiable {
         metric.type = type.rawValue
         return metric
     }
-}
-
-enum MetricType: String {
-    case oneRepMax = "oneRepMax"
-    case maxWeight = "maxWeight"
-    case maxReps = "maxReps"
-    case bestPace = "bestPace"
-    case longestDistance = "longestDistance"
-    case longestDuration = "longestDuration"
 } 

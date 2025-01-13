@@ -10,12 +10,20 @@ A simple fitness tracking application for iOS that allows users to log workouts,
 - Improved error handling and user feedback
 
 ## In-Progress Features
-- Exercise Progress Tracking (Phase 3: Strength Progress Implementation - Complete)
+- Exercise Progress Tracking (Phase 4: Cardio Progress Implementation)
+  - Track distance and pace metrics for cardio workouts
+  - Visualize route data and performance trends
+  - Filter progress by date range
+  - View detailed cardio history
+  - Analyze pace and distance improvements
+
+## Completed Features
+- Strength Progress Implementation (Phase 3)
   - Track weight and rep progress over time
   - Visualize progress with interactive charts
   - Filter progress by date range
   - View detailed exercise history
-  - Coming Soon: Cardio Progress Implementation (Phase 4)
+  - Exercise-specific progress tracking
 
 ## Development Requirements
 - iOS 17.0+

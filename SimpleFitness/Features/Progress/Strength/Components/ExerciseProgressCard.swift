@@ -7,56 +7,59 @@ struct ExerciseProgressCard: View {
     let progressMetrics: [ProgressMetric]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack {
-                Text(template.name ?? "Unknown Exercise")
-                    .font(.headline)
-                Spacer()
-                Text(template.category ?? "Uncategorized")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            // Latest Progress
-            if let latestProgress = latestProgress {
-                HStack(spacing: 16) {
-                    ProgressStat(
-                        title: "Max Weight",
-                        value: "\(Int(latestProgress.maxWeight))lbs"
-                    )
-                    ProgressStat(
-                        title: "Max Reps",
-                        value: "\(Int(latestProgress.maxReps))"
-                    )
-                    ProgressStat(
-                        title: "1RM",
-                        value: "\(Int(latestProgress.oneRepMax))lbs"
-                    )
+        NavigationLink(destination: ExerciseProgressDetail(template: template)) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Header
+                HStack {
+                    Text(template.name ?? "Unknown Exercise")
+                        .font(.headline)
+                    Spacer()
+                    Text(template.category ?? "Uncategorized")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-            }
-            
-            // Progress Chart
-            if !progressMetrics.isEmpty {
-                Chart {
-                    ForEach(progressMetrics) { metric in
-                        LineMark(
-                            x: .value("Date", metric.date ?? Date()),
-                            y: .value("Value", metric.value)
+                
+                // Latest Progress
+                if let latestProgress = latestProgress {
+                    HStack(spacing: 16) {
+                        ProgressStat(
+                            title: "Max Weight",
+                            value: "\(Int(latestProgress.maxWeight))lbs"
                         )
-                        .foregroundStyle(by: .value("Metric", metric.type ?? ""))
+                        ProgressStat(
+                            title: "Max Reps",
+                            value: "\(Int(latestProgress.maxReps))"
+                        )
+                        ProgressStat(
+                            title: "1RM",
+                            value: "\(Int(latestProgress.oneRepMax))lbs"
+                        )
                     }
                 }
-                .frame(height: 150)
-            } else {
-                Text("No progress data available")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                
+                // Progress Chart
+                if !progressMetrics.isEmpty {
+                    Chart {
+                        ForEach(progressMetrics) { metric in
+                            LineMark(
+                                x: .value("Date", metric.date ?? Date()),
+                                y: .value("Value", metric.value)
+                            )
+                            .foregroundStyle(by: .value("Metric", metric.type ?? ""))
+                        }
+                    }
+                    .frame(height: 150)
+                } else {
+                    Text("No progress data available")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .buttonStyle(.plain)
     }
 }
 

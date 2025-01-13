@@ -8,10 +8,11 @@ A simple fitness tracking application that allows users to manually log workouts
 - Streamlined exercise and set management with immediate data persistence
 - Improved UI layout and spacing for better readability
 - Fixed exercise set editing and validation
+- Added map visualization for cardio workouts
 
 ## In Progress
 
-🚧 **Map Visualization**: Adding route tracking and visualization for cardio workouts (running/biking)
+🚧 **Exercise Progress Tracking**: Implementing progress visualization and tracking across workouts, including weight progression, rep tracking, and performance metrics.
 
 ## Features
 
@@ -20,6 +21,7 @@ A simple fitness tracking application that allows users to manually log workouts
 - Duration and distance logging
 - Optional GPS tracking for outdoor activities
 - Workout history viewing
+- Route visualization for cardio workouts
 - Immediate data persistence
 - Intuitive keyboard management
 - Clean, consistent UI layout

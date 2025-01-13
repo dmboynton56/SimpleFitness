@@ -16,6 +16,17 @@ class WorkoutListViewModel: NSObject, ObservableObject {
         fetchWorkouts()
     }
     
+    func generateSampleData() {
+        // First clear existing data
+        SampleData.clearAllData(in: viewContext)
+        
+        // Then generate new sample data
+        SampleData.generateSampleData(in: viewContext)
+        
+        // Refresh the workouts list
+        fetchWorkouts()
+    }
+    
     private func setupFetchedResultsController() {
         let request = NSFetchRequest<Workout>(entityName: "Workout")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Workout.date, ascending: false)]

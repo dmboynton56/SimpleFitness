@@ -3,45 +3,144 @@ import CoreData
 
 struct SampleData {
     static func generateSampleData(in context: NSManagedObjectContext) {
-        // Create exercise templates
-        let templates = ExerciseTemplate.createPreviewTemplates(in: context)
+        // Create exercise templates with realistic categories and exercises
+        let templates = [
+            // Push exercises
+            ("Bench Press", "Push", 135.0),
+            ("Overhead Press", "Push", 95.0),
+            ("Incline Bench Press", "Push", 115.0),
+            ("Tricep Extensions", "Push", 50.0),
+            
+            // Pull exercises
+            ("Barbell Row", "Pull", 135.0),
+            ("Pull-ups", "Pull", 0.0),  // Bodyweight
+            ("Lat Pulldown", "Pull", 120.0),
+            ("Dumbbell Curls", "Pull", 30.0),
+            
+            // Leg exercises
+            ("Squat", "Legs", 185.0),
+            ("Deadlift", "Legs", 225.0),
+            ("Leg Press", "Legs", 225.0),
+            ("Calf Raises", "Legs", 135.0)
+        ].map { name, category, baseWeight in
+            let template = ExerciseTemplate(context: context)
+            template.id = UUID()
+            template.name = name
+            template.category = category
+            return (template, baseWeight)
+        }
         
         // Generate workouts over the past 30 days
         let calendar = Calendar.current
         let today = Date()
         
-        for template in templates {
-            // Create 6 workouts over the past 30 days
-            for i in 0..<6 {
-                guard let workoutDate = calendar.date(byAdding: .day, value: -(i * 5), to: today) else { continue }
+        // Create a Push/Pull/Legs split
+        let workoutSplit = [
+            ("Push", [0, 1, 2, 3]),  // Push day exercises
+            ("Pull", [4, 5, 6, 7]),  // Pull day exercises
+            ("Legs", [8, 9, 10, 11]) // Leg day exercises
+        ]
+        
+        var dayOffset = 0
+        
+        // Generate 30 days of workouts
+        while dayOffset < 30 {
+            for (splitName, exerciseIndices) in workoutSplit {
+                // Skip some workouts randomly (15% chance) to simulate rest days
+                if Double.random(in: 0...1) < 0.15 {
+                    dayOffset += 1
+                    continue
+                }
+                
+                guard let workoutDate = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
                 
                 let workout = Workout(context: context)
                 workout.id = UUID()
                 workout.date = workoutDate
                 workout.type = "Strength"
+                workout.name = splitName
                 
-                let exercise = Exercise(context: context)
-                exercise.id = UUID()
-                exercise.template = template
-                exercise.workout = workout
-                
-                // Generate 3-5 sets with progressive overload
-                let setCount = Int.random(in: 3...5)
-                let baseWeight = template.name?.contains("Press") == true ? 95.0 : 135.0
-                let baseReps = 8
-                
-                for setIndex in 0..<setCount {
-                    let set = ExerciseSet(context: context)
-                    set.id = UUID()
-                    set.exercise = exercise
-                    set.order = Int16(setIndex)
+                // Create exercises for this workout
+                for exerciseIndex in exerciseIndices {
+                    let (template, baseWeight) = templates[exerciseIndex]
                     
-                    // Add some variation and progression
-                    let weekProgress = Double(5 - (i * 5)) // More recent workouts have higher weights
-                    let setDecrement = Double(setIndex) * 0.5 // Later sets might have slightly lower weights
-                    set.weight = baseWeight + weekProgress - setDecrement
-                    set.reps = Int16(baseReps - setIndex) // Reps decrease with each set
+                    let exercise = Exercise(context: context)
+                    exercise.id = UUID()
+                    exercise.name = template.name
+                    exercise.template = template
+                    exercise.workout = workout
+                    
+                    // Calculate progressive overload
+                    let weekProgress = Double(dayOffset / 7) * 2.5  // 2.5 lbs increase per week
+                    
+                    // Generate sets
+                    let setCount = 4  // Consistent 4 sets for all exercises
+                    var exerciseSets = Set<ExerciseSet>()
+                    
+                    for setIndex in 0..<setCount {
+                        let set = ExerciseSet(context: context)
+                        set.id = UUID()
+                        set.exercise = exercise
+                        set.order = Int16(setIndex)
+                        
+                        // Calculate reps - pyramid down
+                        let baseReps: Int16 = 12
+                        set.reps = baseReps - Int16(setIndex * 2) + Int16.random(in: -1...1)
+                        
+                        // Calculate weight - pyramid up
+                        var setWeight = baseWeight
+                        setWeight += weekProgress // Progressive overload
+                        setWeight += Double(setIndex) * 5.0 // Weight increase per set
+                        setWeight += Double.random(in: -2.5...2.5) // Small variation
+                        setWeight = round(setWeight / 5) * 5 // Round to nearest 5
+                        
+                        set.weight = setWeight
+                        exerciseSets.insert(set)
+                    }
+                    
+                    exercise.sets = exerciseSets as NSSet
+                    
+                    // Create strength progress entry
+                    let progress = StrengthProgress.create(in: context)
+                    progress.exercise = exercise
+                    progress.exerciseTemplate = template
+                    progress.date = workoutDate
+                    
+                    // Update progress metrics
+                    let sets = exerciseSets
+                    progress.totalSets = Int16(sets.count)
+                    progress.maxWeight = sets.max(by: { $0.weight < $1.weight })?.weight ?? 0
+                    progress.maxReps = sets.max(by: { $0.reps < $1.reps })?.reps ?? 0
+                    progress.averageWeight = sets.reduce(0) { $0 + $1.weight } / Double(sets.count)
+                    progress.totalVolume = sets.reduce(0) { $0 + ($1.weight * Double($1.reps)) }
+                    
+                    // Calculate one rep max using the best set
+                    if let bestSet = sets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
+                        progress.oneRepMax = progress.calculateOneRepMax(weight: bestSet.weight, reps: bestSet.reps)
+                    }
+                    
+                    // Create progress metrics for charts
+                    for metricType in MetricType.allCases {
+                        let metric = ProgressMetric.create(in: context, type: metricType)
+                        metric.template = template
+                        metric.date = workoutDate
+                        
+                        switch metricType {
+                        case .oneRepMax:
+                            metric.value = progress.oneRepMax
+                        case .maxWeight:
+                            metric.value = progress.maxWeight
+                        case .maxReps:
+                            metric.value = Double(progress.maxReps)
+                        case .totalVolume:
+                            metric.value = progress.totalVolume
+                        case .averageWeight:
+                            metric.value = progress.averageWeight
+                        }
+                    }
                 }
+                
+                dayOffset += 1
             }
         }
         
@@ -54,7 +153,18 @@ struct SampleData {
     }
     
     static func clearAllData(in context: NSManagedObjectContext) {
-        let entities = ["Workout", "Exercise", "ExerciseSet", "ExerciseTemplate", "ProgressMetric"]
+        // Delete in order of dependencies to avoid conflicts
+        let entities = [
+            "CardioProgress",
+            "RoutePoint",
+            "Route",
+            "StrengthProgress",
+            "ProgressMetric",
+            "ExerciseSet",
+            "Exercise",
+            "Workout",
+            "ExerciseTemplate"
+        ]
         
         for entityName in entities {
             let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entityName)
@@ -67,11 +177,14 @@ struct SampleData {
             }
         }
         
-        // Save the context
+        // Save the context after clearing
         do {
             try context.save()
         } catch {
             print("Error saving after clearing data: \(error)")
         }
+        
+        // Reset the context to ensure clean state
+        context.reset()
     }
 } 

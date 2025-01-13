@@ -49,6 +49,12 @@ struct WorkoutListView: View {
                         Image(systemName: "plus")
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: viewModel.generateSampleData) {
+                        Label("Generate Sample", systemImage: "wand.and.stars")
+                    }
+                }
             }
             .sheet(isPresented: $viewModel.showingAddWorkout, onDismiss: {
                 viewModel.fetchWorkouts()

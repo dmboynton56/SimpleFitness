@@ -8,7 +8,6 @@ extension ExerciseTemplate {
         template.id = UUID()
         template.name = "Bench Press"
         template.category = "Chest"
-        template.notes = "Barbell bench press"
         return template
     }
     

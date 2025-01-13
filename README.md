@@ -1,142 +1,97 @@
 # SimpleFitness
 
-A simple fitness tracking application that allows users to manually log workouts with sets, reps, and weights. Includes optional GPS tracking for running and biking activities.
+A simple fitness tracking application for iOS that allows users to log workouts, track progress, and visualize their fitness journey.
 
 ## Recent Updates
+- Added comprehensive progress tracking for strength exercises
+- Implemented interactive charts with date range filtering
+- Enhanced exercise template selection and management
+- Added pull-to-refresh and improved loading states
+- Improved error handling and user feedback
 
-- Enhanced input field management with improved keyboard handling
-- Streamlined exercise and set management with immediate data persistence
-- Improved UI layout and spacing for better readability
-- Fixed exercise set editing and validation
-- Added map visualization for cardio workouts
-- Added progress tracking for strength and cardio workouts
-- Implemented tab-based navigation structure
+## In-Progress Features
+- Exercise Progress Tracking (Phase 3: Strength Progress Implementation - Complete)
+  - Track weight and rep progress over time
+  - Visualize progress with interactive charts
+  - Filter progress by date range
+  - View detailed exercise history
+  - Coming Soon: Cardio Progress Implementation (Phase 4)
 
-## In Progress
-
-🚧 **Exercise Progress Tracking**: Implementing progress visualization and tracking across workouts, including:
-- Weight progression tracking
-- Rep tracking and performance metrics
-- Cardio performance metrics
-- Progress visualization
-- Historical data analysis
-
-Current Phase: Phase 3 - Strength Progress Implementation
-✓ Completed: Navigation structure and data model
-⏳ In Progress: Strength progress UI implementation
-
-## Features
-
-- Manual workout entry with sets and reps
-- Weight tracking for strength exercises
-- Duration and distance logging
-- Optional GPS tracking for outdoor activities
-- Workout history viewing
-- Route visualization for cardio workouts
-- Progress tracking for exercises
-- Immediate data persistence
-- Intuitive keyboard management
-- Clean, consistent UI layout
-
-## Development
-
-### Requirements
+## Development Requirements
 - iOS 17.0+
 - Xcode 15.0+
 - Swift 5.9+
+- SwiftUI
+- CoreData
 
-### Setup
+## Setup Instructions
 1. Clone the repository
 2. Open SimpleFitness.xcodeproj in Xcode
-3. Build and run
-
-### Architecture
-- SwiftUI for UI
-- CoreData for persistence
-- MVVM architecture
-- Modular components for reusability
-- Service-based progress tracking
-- Tab-based navigation structure
+3. Build and run the project
 
 ## File Structure
-
 ```
 SimpleFitness/
 ├── App/
-│   ├── SimpleFitnessApp.swift
-│   └── MainTabView.swift
-├── Assets.xcassets/
+│   └── SimpleFitnessApp.swift
 ├── Core/
 │   ├── Models/
-│   │   ├── SimpleFitnessModel.xcdatamodeld/
-│   │   ├── Exercise.swift
+│   │   ├── SimpleFitnessModel.xcdatamodeld
+│   │   ├── Exercise+CoreDataClass.swift
 │   │   ├── ExerciseTemplate+CoreDataClass.swift
-│   │   ├── ExerciseTemplate+CoreDataProperties.swift
-│   │   ├── ExerciseSet+CoreDataClass.swift
-│   │   ├── ExerciseSet+CoreDataProperties.swift
-│   │   ├── Workout+CoreDataClass.swift
-│   │   ├── Workout+CoreDataProperties.swift
 │   │   ├── StrengthProgress+CoreDataClass.swift
-│   │   ├── StrengthProgress+CoreDataProperties.swift
-│   │   ├── CardioProgress+CoreDataClass.swift
-│   │   ├── CardioProgress+CoreDataProperties.swift
-│   │   ├── ProgressMetric+CoreDataClass.swift
-│   │   └── ProgressMetric+CoreDataProperties.swift
+│   │   └── ProgressMetric+CoreDataClass.swift
 │   └── Services/
 │       ├── LocationManager.swift
 │       ├── Persistence.swift
 │       ├── ExerciseTemplateService.swift
 │       └── ProgressCalculationService.swift
-├── Features/
-│   ├── Progress/
-│   │   ├── Main/
-│   │   │   └── ProgressView.swift
-│   │   ├── Strength/
-│   │   ├── Cardio/
-│   │   ├── Charts/
-│   │   └── Detail/
-│   └── Workouts/
-│       ├── Add/
-│       │   ├── AddWorkoutView.swift
-│       │   ├── AddWorkoutViewModel.swift
-│       │   ├── Components/
-│       │   │   ├── WorkoutTypeSelectionView.swift
-│       │   │   ├── StrengthWorkoutForm.swift
-│       │   │   ├── CardioWorkoutForm.swift
-│       │   │   └── ActiveWorkoutView.swift
-│       │   └── Models/
-│       │       └── WorkoutFormModel.swift
-│       ├── Detail/
-│       │   ├── WorkoutDetailView.swift
-│       │   ├── WorkoutDetailViewModel.swift
-│       │   └── Components/
-│       │       ├── ExerciseEditForm.swift
-│       │       └── ExerciseSetList.swift
-│       └── List/
-│           ├── WorkoutListView.swift
-│           └── WorkoutListViewModel.swift
-├── Info.plist
-├── Resources/
-├── Shared/
-├── Utils/
-└── Views/
-    └── NumberField.swift
-
-Tests:
-├── SimpleFitnessTests/
-└── SimpleFitnessUITests/
+└── Features/
+    ├── Progress/
+    │   ├── Main/
+    │   │   └── ProgressView.swift
+    │   └── Strength/
+    │       ├── StrengthProgressView.swift
+    │       ├── StrengthProgressViewModel.swift
+    │       └── Components/
+    │           ├── ExerciseProgressCard.swift
+    │           └── ExerciseProgressDetail.swift
+    └── Workouts/
+        ├── List/
+        │   ├── WorkoutListView.swift
+        │   └── WorkoutListViewModel.swift
+        ├── Add/
+        │   ├── AddWorkoutView.swift
+        │   └── Components/
+        │       ├── WorkoutTypeSelectionView.swift
+        │       └── ActiveWorkoutView.swift
+        └── Detail/
+            ├── WorkoutDetailView.swift
+            ├── WorkoutDetailViewModel.swift
+            └── Components/
+                └── EditExerciseForm.swift
 ```
 
-### Key Components
-- `NumberField`: Reusable numeric input with validation
-- `ExerciseEditForm`: Centralized exercise management
-- `ExerciseSetList`: Exercise set management with proper layout
-- `ProgressCalculationService`: Centralized progress tracking and calculations
-- `MainTabView`: Tab-based navigation controller
-- Focus state management for improved input handling
+## Key Features
+- Manual workout entry with sets and reps
+- Weight tracking for strength exercises
+- Duration and distance logging
+- Optional GPS tracking for outdoor activities
+- Progress tracking and visualization
+- Exercise history and trends
+- Template-based exercise management
+
+## Progress Tracking
+The app now includes comprehensive progress tracking features:
+- Strength Progress
+  - Track max weight, reps, and one-rep max
+  - View progress charts with date filtering
+  - Analyze trends and improvements
+  - Access detailed exercise history
+- Coming Soon: Cardio Progress
+  - Track distance, pace, and duration
+  - View route maps and elevation data
+  - Analyze performance trends
 
 ## Contributing
-Feel free to submit issues and pull requests.
-
-## License
-MIT License - see LICENSE file for details 
+Feel free to submit issues and enhancement requests. 

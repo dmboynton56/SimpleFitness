@@ -125,4 +125,72 @@ class ProgressCalculationService {
             return []
         }
     }
+    
+    func updateCardioProgress(for route: Route) {
+        guard let workout = route.workout,
+              let points = route.points as? Set<RoutePoint>,
+              points.count > 1 else {
+            return
+        }
+        
+        let progress = CardioProgress(context: viewContext)
+        progress.id = UUID()
+        progress.date = workout.date
+        progress.route = route
+        progress.distance = route.distance
+        
+        // Calculate duration from route points
+        let sortedPoints = points.sorted { $0.order < $1.order }
+        if let startTime = sortedPoints.first?.timestamp,
+           let endTime = sortedPoints.last?.timestamp {
+            progress.duration = endTime.timeIntervalSince(startTime)
+        }
+        
+        // Calculate pace (minutes per kilometer)
+        if progress.distance > 0 {
+            progress.averagePace = (progress.duration / 60) / (progress.distance / 1000)
+            
+            // Calculate max pace from route segments
+            var maxPace: Double = 0
+            for i in 0..<(sortedPoints.count - 1) {
+                let point1 = sortedPoints[i]
+                let point2 = sortedPoints[i + 1]
+                
+                let segmentDistance = calculateDistance(from: point1, to: point2)
+                let segmentDuration = point2.timestamp?.timeIntervalSince(point1.timestamp ?? Date()) ?? 0
+                
+                if segmentDistance > 0 {
+                    let segmentPace = (segmentDuration / 60) / (segmentDistance / 1000)
+                    maxPace = max(maxPace, segmentPace)
+                }
+            }
+            progress.maxPace = maxPace
+        }
+        
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error saving cardio progress: \(error)")
+        }
+    }
+    
+    private func calculateDistance(from point1: RoutePoint, to point2: RoutePoint) -> Double {
+        let lat1 = point1.latitude
+        let lon1 = point1.longitude
+        let lat2 = point2.latitude
+        let lon2 = point2.longitude
+        
+        let R = 6371e3 // Earth's radius in meters
+        let φ1 = lat1 * .pi / 180
+        let φ2 = lat2 * .pi / 180
+        let Δφ = (lat2 - lat1) * .pi / 180
+        let Δλ = (lon2 - lon1) * .pi / 180
+        
+        let a = sin(Δφ/2) * sin(Δφ/2) +
+                cos(φ1) * cos(φ2) *
+                sin(Δλ/2) * sin(Δλ/2)
+        let c = 2 * atan2(sqrt(a), sqrt(1-a))
+        
+        return R * c // Distance in meters
+    }
 } 

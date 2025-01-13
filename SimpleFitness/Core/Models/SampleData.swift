@@ -239,8 +239,8 @@ struct SampleData {
         let pointCount = Int(progress.distance * 10)
         
         // Generate route points with realistic GPS coordinates
-        var lastLat = 37.7749 // Starting in San Francisco
-        var lastLng = -122.4194
+        var lastLat = 40.0150 // Starting in Boulder, CO
+        var lastLng = -105.2705
         var totalDistance: Double = 0
         
         for i in 0..<pointCount {
@@ -250,8 +250,9 @@ struct SampleData {
             point.route = route
             
             // Add some random variation to create a realistic path
-            let latDelta = Double.random(in: -0.001...0.001)
-            let lngDelta = Double.random(in: -0.001...0.001)
+            // Smaller variations for more realistic local routes
+            let latDelta = Double.random(in: -0.0005...0.0005)
+            let lngDelta = Double.random(in: -0.0005...0.0005)
             
             lastLat += latDelta
             lastLng += lngDelta

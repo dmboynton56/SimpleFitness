@@ -1,17 +1,38 @@
 import Foundation
 import CoreLocation
+import CoreData
 import Combine
 
-class LocationManager: NSObject, ObservableObject {
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationManager()
     
     private let locationManager = CLLocationManager()
+    private let context: NSManagedObjectContext
     
     @Published var location: CLLocation?
     @Published var isTracking = false
     @Published var error: Error?
+    @Published var currentRoute: Route?
+    @Published var currentDistance: Double = 0
+    @Published var isPaused = false
+    @Published private(set) var totalPausedDuration: TimeInterval = 0
+    
+    private var pauseStartTime: Date?
+    
+    var lastPauseTime: Date? {
+        pauseStartTime
+    }
+    
+    var authorizationStatus: CLAuthorizationStatus {
+        locationManager.authorizationStatus
+    }
+    
+    var isAuthorized: Bool {
+        authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
+    }
     
     override private init() {
+        self.context = PersistenceController.shared.container.viewContext
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -19,7 +40,7 @@ class LocationManager: NSObject, ObservableObject {
         locationManager.showsBackgroundLocationIndicator = true
         locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.activityType = .fitness
-        locationManager.distanceFilter = kCLDistanceFilterNone
+        locationManager.distanceFilter = 10 // Update every 10 meters
         requestPermission()
     }
     
@@ -28,20 +49,72 @@ class LocationManager: NSObject, ObservableObject {
     }
     
     func startTracking() {
-        locationManager.startUpdatingLocation()
-        isTracking = true
+        // Create a new route
+        let route = Route.create(in: context)
+        currentRoute = route
+        currentDistance = 0
+        totalPausedDuration = 0
+        pauseStartTime = nil
+        
+        do {
+            try context.save()
+            locationManager.startUpdatingLocation()
+            isTracking = true
+        } catch {
+            self.error = error
+        }
     }
     
     func stopTracking() {
-        locationManager.stopUpdatingLocation()
         isTracking = false
+        isPaused = false
+        currentRoute?.endTime = Date().addingTimeInterval(-totalPausedDuration)
+        try? context.save()
+        
+        // Reset state
+        totalPausedDuration = 0
+        pauseStartTime = nil
     }
-}
-
-extension LocationManager: CLLocationManagerDelegate {
+    
+    func pauseTracking() {
+        isPaused = true
+        pauseStartTime = Date()
+        // Keep locationManager running but don't add points to route
+    }
+    
+    func resumeTracking() {
+        if let pauseStart = pauseStartTime {
+            totalPausedDuration += Date().timeIntervalSince(pauseStart)
+        }
+        isPaused = false
+        pauseStartTime = nil
+    }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        self.location = location
+        guard isTracking, !isPaused, let location = locations.last else { return }
+        
+        if currentRoute == nil {
+            currentRoute = Route(context: context)
+            currentRoute?.id = UUID()
+            currentRoute?.startTime = Date()
+        }
+        
+        // Add new point
+        let point = RoutePoint(context: context)
+        point.id = UUID()
+        point.timestamp = Date()
+        point.latitude = location.coordinate.latitude
+        point.longitude = location.coordinate.longitude
+        point.route = currentRoute
+        
+        // Update distance
+        if let points = currentRoute?.points as? Set<RoutePoint>,
+           let lastPoint = points.sorted(by: { $0.timestamp ?? Date() < $1.timestamp ?? Date() }).last {
+            let lastLocation = CLLocation(latitude: lastPoint.latitude, longitude: lastPoint.longitude)
+            currentDistance += location.distance(from: lastLocation) / 1000 // Convert to km
+        }
+        
+        try? context.save()
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

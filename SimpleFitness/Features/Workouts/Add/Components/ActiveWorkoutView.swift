@@ -2,7 +2,7 @@ import SwiftUI
 import CoreLocation
 
 struct ActiveWorkoutView: View {
-    @ObservedObject var viewModel: AddWorkoutViewModel
+    @ObservedObject var locationManager = LocationManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var elapsedSeconds: Int = 0
     @State private var timer: Timer?
@@ -16,8 +16,8 @@ struct ActiveWorkoutView: View {
                     .padding()
                 
                 // Distance (if available)
-                if let distance = viewModel.activeDistance {
-                    Text(String(format: "%.2f miles", distance))
+                if locationManager.isTracking {
+                    Text(String(format: "%.2f miles", locationManager.currentDistance))
                         .font(.title2)
                         .padding()
                 }
@@ -41,37 +41,27 @@ struct ActiveWorkoutView: View {
                 if timer != nil {
                     Button("End Workout") {
                         stopWorkout()
-                        // Transfer the elapsed time to the view model
-                        viewModel.hours = elapsedSeconds / 3600
-                        viewModel.minutes = (elapsedSeconds % 3600) / 60
-                        viewModel.seconds = elapsedSeconds % 60
-                        if let distance = viewModel.activeDistance {
-                            viewModel.distance = String(format: "%.2f", distance)
-                        }
-                        dismiss()
                     }
-                    .padding()
                 }
             }
-            .navigationTitle("\(viewModel.workoutType?.rawValue ?? "") Workout")
-            .navigationBarItems(leading: Button("Cancel") {
-                stopWorkout()
-                dismiss()
-            })
         }
     }
     
     private func startWorkout() {
-        viewModel.startLocationTracking()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             elapsedSeconds += 1
         }
+        locationManager.startTracking()
     }
     
     private func stopWorkout() {
         timer?.invalidate()
         timer = nil
-        viewModel.stopLocationTracking()
+        locationManager.stopTracking()
+        // Transfer the elapsed time to the view model
+        let hours = elapsedSeconds / 3600
+        let minutes = (elapsedSeconds % 3600) / 60
+        let seconds = elapsedSeconds % 60
     }
     
     private func timeString(from seconds: Int) -> String {
@@ -82,8 +72,6 @@ struct ActiveWorkoutView: View {
     }
 }
 
-struct ActiveWorkoutView_Previews: PreviewProvider {
-    static var previews: some View {
-        ActiveWorkoutView(viewModel: AddWorkoutViewModel())
-    }
+#Preview {
+    ActiveWorkoutView()
 } 

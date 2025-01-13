@@ -1,4 +1,6 @@
 import SwiftUI
+import CoreData
+import MapKit
 
 struct WorkoutDetailView: View {
     @StateObject private var viewModel: WorkoutDetailViewModel
@@ -58,11 +60,25 @@ struct WorkoutDetailView: View {
                 }
             } header: {
                 Text("Workout Details")
-            }
-            
-            // Exercises Section (for strength workouts)
-            if viewModel.workout.type == "Strength" {
-                Section {
+                    .font(.headline)
+                    .padding(.top)
+                
+                if viewModel.workout.type == "Running" || viewModel.workout.type == "Biking" {
+                    Text("Route")
+                        .font(.headline)
+                        .padding(.top)
+                    
+                    RouteMapView(route: viewModel.workout.route)
+                        .frame(height: 300)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding(.horizontal)
+                }
+                
+                if viewModel.workout.type == "Strength" {
+                    Text("Exercises")
+                        .font(.headline)
+                        .padding(.top)
+                    
                     ForEach(viewModel.exercises) { exercise in
                         if viewModel.isEditing {
                             ExerciseEditForm(
@@ -93,8 +109,6 @@ struct WorkoutDetailView: View {
                             }
                         }
                     }
-                } header: {
-                    Text("Exercises")
                 }
             }
             

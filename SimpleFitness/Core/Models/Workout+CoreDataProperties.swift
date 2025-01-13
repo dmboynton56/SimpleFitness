@@ -24,6 +24,12 @@ extension Workout: Identifiable {
     @NSManaged public var notes: String?
     @NSManaged public var type: String?
     @NSManaged public var exercises: NSSet?
+    @NSManaged public var route: Route?
+    
+    public var exerciseArray: [Exercise] {
+        let set = exercises as? Set<Exercise> ?? []
+        return set.sorted { $0.id?.uuidString ?? "" < $1.id?.uuidString ?? "" }
+    }
 }
 
 // MARK: Generated accessors for exercises

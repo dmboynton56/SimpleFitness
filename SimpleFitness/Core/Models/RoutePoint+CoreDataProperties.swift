@@ -11,5 +11,6 @@ extension RoutePoint {
     @NSManaged public var longitude: Double
     @NSManaged public var timestamp: Date?
     @NSManaged public var order: Int16
+    @NSManaged public var elevation: Double
     @NSManaged public var route: Route?
 } 

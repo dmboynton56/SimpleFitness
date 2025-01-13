@@ -34,7 +34,7 @@ extension Route {
         }
     }
     
-    private func calculateDistance(from point1: RoutePoint, to point2: RoutePoint) -> Double {
+    public func calculateDistance(from point1: RoutePoint, to point2: RoutePoint) -> Double {
         // Simple Haversine formula for distance calculation
         let lat1 = point1.latitude * .pi / 180
         let lat2 = point2.latitude * .pi / 180
@@ -52,7 +52,7 @@ extension Route {
         // Earth's radius in kilometers
         let r = 6371.0
         
-        // Return distance in kilometers
-        return r * c
+        // Convert to miles (1 km = 0.621371 miles)
+        return r * c * 0.621371
     }
 } 

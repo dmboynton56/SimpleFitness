@@ -3,6 +3,21 @@ import CoreData
 
 struct SampleData {
     static func generateSampleData(in context: NSManagedObjectContext) {
+        // Generate strength workouts (existing code)
+        generateStrengthWorkouts(in: context)
+        
+        // Generate cardio workouts
+        generateCardioWorkouts(in: context)
+        
+        // Save the context
+        do {
+            try context.save()
+        } catch {
+            print("Error saving sample data: \(error)")
+        }
+    }
+    
+    private static func generateStrengthWorkouts(in context: NSManagedObjectContext) {
         // Create exercise templates with realistic categories and exercises
         let templates = [
             // Push exercises
@@ -143,12 +158,82 @@ struct SampleData {
                 dayOffset += 1
             }
         }
+    }
+    
+    private static func generateCardioWorkouts(in context: NSManagedObjectContext) {
+        let calendar = Calendar.current
+        let today = Date()
         
-        // Save the context
-        do {
-            try context.save()
-        } catch {
-            print("Error saving sample data: \(error)")
+        // Generate 30 days of cardio workouts
+        for dayOffset in 0..<30 {
+            // Skip some days randomly (30% chance) to simulate rest days
+            if Double.random(in: 0...1) < 0.3 {
+                continue
+            }
+            
+            guard let workoutDate = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
+            
+            // Alternate between running and biking
+            let isRunning = dayOffset % 2 == 0
+            
+            let workout = Workout(context: context)
+            workout.id = UUID()
+            workout.date = workoutDate
+            workout.type = isRunning ? "Running" : "Biking"
+            workout.name = isRunning ? "Morning Run" : "Evening Ride"
+            
+            // Create route
+            let route = Route(context: context)
+            route.id = UUID()
+            route.startTime = workoutDate
+            route.endTime = calendar.date(byAdding: .minute, value: Int.random(in: 30...90), to: workoutDate)
+            
+            // Generate route points
+            var totalDistance = 0.0
+            let targetDistance = Double.random(in: isRunning ? 3...8 : 10...20) // miles
+            var currentLat = 37.7749 // Sample starting point (San Francisco)
+            var currentLon = -122.4194
+            
+            while totalDistance < targetDistance {
+                let point = RoutePoint(context: context)
+                point.id = UUID()
+                point.timestamp = calendar.date(byAdding: .second, value: Int.random(in: 10...30), to: route.startTime ?? workoutDate)
+                point.order = Int16((route.points?.count ?? 0))
+                
+                // Simulate movement
+                currentLat += Double.random(in: -0.001...0.001)
+                currentLon += Double.random(in: -0.001...0.001)
+                point.latitude = currentLat
+                point.longitude = currentLon
+                
+                point.route = route
+                
+                // Update total distance
+                if let previousPoint = route.pointsArray.last {
+                    let segmentDistance = route.calculateDistance(from: previousPoint, to: point)
+                    totalDistance += segmentDistance
+                }
+            }
+            
+            route.distance = totalDistance
+            workout.route = route
+            
+            // Create cardio progress
+            let progress = CardioProgress(context: context)
+            progress.id = UUID()
+            progress.date = workoutDate
+            progress.route = route
+            progress.updateFromRoute(route)
+            
+            // Add some progression over time
+            let weekProgress = Double(dayOffset / 7)
+            progress.averagePace -= weekProgress * 0.1 // Slight improvement in pace over time
+            
+            // Save the workout
+            workout.distance = totalDistance
+            if let start = route.startTime, let end = route.endTime {
+                workout.duration = end.timeIntervalSince(start)
+            }
         }
     }
     

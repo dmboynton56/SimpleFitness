@@ -12,5 +12,7 @@ extension CardioProgress {
     @NSManaged public var duration: Double
     @NSManaged public var averagePace: Double
     @NSManaged public var maxPace: Double
+    @NSManaged public var elevationGain: Double
+    @NSManaged public var splitTimes: String?
     @NSManaged public var route: Route?
 } 

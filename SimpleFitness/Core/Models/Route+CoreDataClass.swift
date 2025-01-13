@@ -7,6 +7,7 @@ public class Route: NSManagedObject {
         let route = Route(context: context)
         route.id = UUID()
         route.startTime = Date()
+        route.distance = 0
         return route
     }
 } 

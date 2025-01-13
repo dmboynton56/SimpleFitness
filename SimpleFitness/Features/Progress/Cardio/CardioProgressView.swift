@@ -221,7 +221,7 @@ enum TimeRange: String, CaseIterable, Identifiable {
     var displayName: String { rawValue }
 }
 
-struct CardioActivity {
+struct CardioActivity: Identifiable {
     let id: UUID
     let date: Date
     let distance: Double

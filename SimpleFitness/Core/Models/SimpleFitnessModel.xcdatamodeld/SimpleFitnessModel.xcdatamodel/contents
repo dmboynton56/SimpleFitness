@@ -5,6 +5,7 @@
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <relationship name="sets" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ExerciseSet" inverseName="exercise" inverseEntity="ExerciseSet"/>
+        <relationship name="strengthProgress" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="StrengthProgress" inverseName="exercise" inverseEntity="StrengthProgress"/>
         <relationship name="template" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ExerciseTemplate" inverseName="exercises" inverseEntity="ExerciseTemplate"/>
         <relationship name="workout" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Workout" inverseName="exercises" inverseEntity="Workout"/>
     </entity>
@@ -21,12 +22,21 @@
         <attribute name="lastUsedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Exercise" inverseName="template" inverseEntity="Exercise"/>
+        <relationship name="progressMetrics" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProgressMetric" inverseName="template" inverseEntity="ProgressMetric"/>
+    </entity>
+    <entity name="ProgressMetric" representedClassName="ProgressMetric" syncable="YES" codeGenerationType="class">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="template" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ExerciseTemplate" inverseName="progressMetrics" inverseEntity="ExerciseTemplate"/>
     </entity>
     <entity name="Route" representedClassName="Route" syncable="YES" codeGenerationType="class">
         <attribute name="distance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="endTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="startTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="cardioProgress" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CardioProgress" inverseName="route" inverseEntity="CardioProgress"/>
         <relationship name="points" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RoutePoint" inverseName="route" inverseEntity="RoutePoint"/>
         <relationship name="workout" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Workout" inverseName="route" inverseEntity="Workout"/>
     </entity>
@@ -37,6 +47,23 @@
         <attribute name="order" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="route" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Route" inverseName="points" inverseEntity="Route"/>
+    </entity>
+    <entity name="StrengthProgress" representedClassName="StrengthProgress" syncable="YES" codeGenerationType="class">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="maxReps" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="maxWeight" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="oneRepMax" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="exercise" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Exercise" inverseName="strengthProgress" inverseEntity="Exercise"/>
+    </entity>
+    <entity name="CardioProgress" representedClassName="CardioProgress" syncable="YES" codeGenerationType="class">
+        <attribute name="averagePace" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="distance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="maxPace" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="route" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Route" inverseName="cardioProgress" inverseEntity="Route"/>
     </entity>
     <entity name="Workout" representedClassName="Workout" syncable="YES" codeGenerationType="class">
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

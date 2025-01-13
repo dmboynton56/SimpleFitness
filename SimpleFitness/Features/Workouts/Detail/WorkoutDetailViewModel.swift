@@ -8,10 +8,14 @@ class WorkoutDetailViewModel: ObservableObject {
     @Published var isEditing = false
     
     private let viewContext: NSManagedObjectContext
+    private let progressService: ProgressCalculationService
     
-    init(workout: Workout, context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
+    init(workout: Workout, 
+         context: NSManagedObjectContext = PersistenceController.shared.container.viewContext,
+         progressService: ProgressCalculationService = .shared) {
         self.workout = workout
         self.viewContext = context
+        self.progressService = progressService
         loadExercises()
     }
     
@@ -70,6 +74,10 @@ class WorkoutDetailViewModel: ObservableObject {
         }
         
         saveChanges()
+        
+        // Update progress after exercise changes
+        progressService.updateStrengthProgress(for: exercise)
+        
         loadExercises() // Reload to reflect any sorting changes
     }
     
@@ -106,6 +114,7 @@ class WorkoutDetailViewModel: ObservableObject {
         exercise.id = UUID()
         exercise.name = template.name
         exercise.workout = workout
+        exercise.template = template  // Important for progress tracking
         
         // Create default set
         let set = ExerciseSet(context: viewContext)

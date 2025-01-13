@@ -8,6 +8,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     private let locationManager = CLLocationManager()
     private let context: NSManagedObjectContext
+    private let progressService: ProgressCalculationService
     
     @Published var location: CLLocation?
     @Published var isTracking = false
@@ -33,6 +34,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     override private init() {
         self.context = PersistenceController.shared.container.viewContext
+        self.progressService = ProgressCalculationService.shared
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -68,12 +70,20 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func stopTracking() {
         isTracking = false
         isPaused = false
-        currentRoute?.endTime = Date().addingTimeInterval(-totalPausedDuration)
-        try? context.save()
+        
+        if let route = currentRoute {
+            route.endTime = Date().addingTimeInterval(-totalPausedDuration)
+            
+            // Update progress when route is completed
+            progressService.updateCardioProgress(for: route)
+            
+            try? context.save()
+        }
         
         // Reset state
         totalPausedDuration = 0
         pauseStartTime = nil
+        currentRoute = nil
     }
     
     func pauseTracking() {

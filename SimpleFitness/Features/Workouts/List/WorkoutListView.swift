@@ -11,10 +11,6 @@ struct WorkoutListView: View {
                     NavigationLink(destination: WorkoutDetailView(workout: workout)) {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                workoutIcon(for: workout.type)
-                                    .foregroundStyle(workoutColor(for: workout.type))
-                                    .font(.title2)
-                                
                                 VStack(alignment: .leading) {
                                     Text(workout.name ?? "Untitled Workout")
                                         .font(.headline)
@@ -28,12 +24,18 @@ struct WorkoutListView: View {
                                             .foregroundColor(.secondary)
                                     }
                                     .font(.subheadline)
+                                    
+                                    Text(viewModel.formattedDate(workout.date))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
                                 }
+                                
+                                Spacer()
+                                
+                                workoutIcon(for: workout.type)
+                                    .foregroundStyle(workoutColor(for: workout.type))
+                                    .font(.title2)
                             }
-                            
-                            Text(viewModel.formattedDate(workout.date))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                         }
                         .padding(.vertical, 4)
                     }

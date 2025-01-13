@@ -15,7 +15,7 @@ struct SimpleFitnessApp: App {
 
     var body: some Scene {
         WindowGroup {
-            WorkoutListView()
+            MainTabView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .environmentObject(locationManager)
         }

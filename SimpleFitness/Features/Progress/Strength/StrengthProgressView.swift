@@ -7,49 +7,61 @@ struct StrengthProgressView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                // Search and Filter
-                VStack(spacing: 12) {
-                    // Search
-                    TextField("Search exercises", text: $viewModel.searchText)
-                        .textFieldStyle(.roundedBorder)
-                        .padding(.horizontal)
-                    
-                    // Category Filter
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            CategoryButton(
-                                title: "All",
-                                isSelected: viewModel.selectedCategory == nil,
-                                action: { viewModel.selectedCategory = nil }
-                            )
-                            
-                            ForEach(viewModel.categories, id: \.self) { category in
-                                CategoryButton(
-                                    title: category,
-                                    isSelected: viewModel.selectedCategory == category,
-                                    action: { viewModel.selectedCategory = category }
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.vertical)
-                .background(Color(.secondarySystemGroupedBackground))
-                
-                // Exercise List
-                ForEach(viewModel.filteredTemplates) { template in
-                    ExerciseProgressCard(
-                        template: template,
-                        latestProgress: viewModel.getLatestProgress(for: template),
-                        progressMetrics: viewModel.getProgress(for: template)
-                    )
-                    .padding(.horizontal)
-                }
+                searchAndFilterSection
+                exerciseList
             }
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground))
+    }
+    
+    private var searchAndFilterSection: some View {
+        VStack(spacing: 12) {
+            searchField
+            categoryFilter
+        }
+        .padding(.vertical)
+        .background(Color(.secondarySystemGroupedBackground))
+    }
+    
+    private var searchField: some View {
+        TextField("Search exercises", text: $viewModel.searchText)
+            .textFieldStyle(.roundedBorder)
+            .padding(.horizontal)
+    }
+    
+    private var categoryFilter: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                CategoryButton(
+                    title: "All",
+                    isSelected: viewModel.selectedCategory == nil,
+                    action: { viewModel.selectedCategory = nil }
+                )
+                
+                ForEach(viewModel.categories, id: \.self) { category in
+                    CategoryButton(
+                        title: category,
+                        isSelected: viewModel.selectedCategory == category,
+                        action: { viewModel.selectedCategory = category }
+                    )
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    private var exerciseList: some View {
+        LazyVStack(spacing: 16) {
+            ForEach(viewModel.filteredTemplates) { template in
+                ExerciseProgressCard(
+                    template: template,
+                    latestProgress: viewModel.getLatestProgress(for: template),
+                    progressMetrics: viewModel.getProgress(for: template)
+                )
+                .padding(.horizontal)
+            }
+        }
     }
 }
 

@@ -193,4 +193,37 @@ class ProgressCalculationService {
         
         return R * c // Distance in meters
     }
+    
+    func updateStrengthProgress(for exercise: Exercise) {
+        guard let template = exercise.template,
+              let sets = exercise.sets as? Set<ExerciseSet>,
+              let workout = exercise.workout else {
+            return
+        }
+        
+        let progress = StrengthProgress(context: viewContext)
+        progress.id = UUID()
+        progress.date = workout.date
+        progress.exercise = exercise
+        progress.exerciseTemplate = template
+        
+        // Calculate metrics
+        let sortedSets = sets.sorted { $0.order < $1.order }
+        progress.maxWeight = sortedSets.map { $0.weight }.max() ?? 0
+        progress.maxReps = sortedSets.map { $0.reps }.max() ?? 0
+        progress.totalSets = Int16(sets.count)
+        progress.totalVolume = sortedSets.reduce(0) { $0 + ($1.weight * Double($1.reps)) }
+        progress.averageWeight = sortedSets.map { $0.weight }.reduce(0, +) / Double(sets.count)
+        
+        // Calculate one rep max using Brzycki formula
+        if let bestSet = sortedSets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
+            progress.oneRepMax = bestSet.weight * (36 / (37 - Double(bestSet.reps)))
+        }
+        
+        do {
+            try viewContext.save()
+        } catch {
+            print("Error saving strength progress: \(error)")
+        }
+    }
 } 

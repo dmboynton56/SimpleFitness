@@ -38,7 +38,29 @@ struct ExerciseProgressDetail: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                metricTypeSelector
+                // Metric Type Selector
+                Menu {
+                    ForEach(MetricType.allCases) { type in
+                        Button {
+                            viewModel.selectedMetricType = type
+                        } label: {
+                            Label(type.displayName, systemImage: metricIcon(for: type))
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Label(viewModel.selectedMetricType.displayName, systemImage: metricIcon(for: viewModel.selectedMetricType))
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .padding(.horizontal)
+                
                 if viewModel.isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -52,13 +74,58 @@ struct ExerciseProgressDetail: View {
                             }
                         }
                     }
+                    .padding()
                 } else {
-                    statsGrid
-                    chartSection
-                    historySection
+                    // Stats Grid
+                    if let progress = viewModel.latestProgress {
+                        StatsGrid(progress: progress)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Chart Section
+                    if !viewModel.progressMetrics.isEmpty {
+                        ChartSection(
+                            metrics: viewModel.progressMetrics,
+                            selectedMetricType: viewModel.selectedMetricType,
+                            selectedDateRange: $selectedDateRange,
+                            selectedDataPoint: $selectedDataPoint
+                        )
+                    }
+                    
+                    // History Section
+                    if !viewModel.exerciseHistory.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("History")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            ForEach(viewModel.exerciseHistory, id: \.date) { entry in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(entry.date.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    ForEach(entry.sets.sorted(by: { $0.order < $1.order })) { set in
+                                        HStack {
+                                            Text("Set \(set.order + 1)")
+                                                .font(.subheadline)
+                                                .foregroundStyle(.secondary)
+                                            Spacer()
+                                            Text("\(Int(set.weight))lbs × \(set.reps)")
+                                                .font(.subheadline.bold())
+                                        }
+                                    }
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
                 }
             }
-            .padding()
+            .padding(.vertical)
         }
         .refreshable {
             await viewModel.loadData()
@@ -66,47 +133,18 @@ struct ExerciseProgressDetail: View {
         .navigationTitle(viewModel.template.name ?? "Exercise Progress")
     }
     
-    private var metricTypeSelector: some View {
-        Picker("Metric Type", selection: $viewModel.selectedMetricType) {
-            ForEach(MetricType.allCases) { type in
-                Text(type.displayName).tag(type)
-            }
-        }
-        .pickerStyle(.segmented)
-    }
-    
-    private var statsGrid: some View {
-        Group {
-            if let progress = viewModel.latestProgress {
-                StatsGrid(progress: progress)
-            } else {
-                EmptyView()
-            }
-        }
-    }
-    
-    private var chartSection: some View {
-        Group {
-            if !viewModel.progressMetrics.isEmpty {
-                ChartSection(
-                    metrics: viewModel.progressMetrics,
-                    selectedMetricType: viewModel.selectedMetricType,
-                    selectedDateRange: $selectedDateRange,
-                    selectedDataPoint: $selectedDataPoint
-                )
-            } else {
-                EmptyView()
-            }
-        }
-    }
-    
-    private var historySection: some View {
-        Group {
-            if !viewModel.exerciseHistory.isEmpty {
-                HistorySection(history: viewModel.exerciseHistory)
-            } else {
-                EmptyView()
-            }
+    private func metricIcon(for type: MetricType) -> String {
+        switch type {
+        case .oneRepMax:
+            return "bolt.fill"
+        case .maxWeight:
+            return "scalemass.fill"
+        case .maxReps:
+            return "repeat"
+        case .totalVolume:
+            return "sum"
+        case .averageWeight:
+            return "chart.bar.fill"
         }
     }
 }
@@ -164,12 +202,25 @@ private struct ChartSection: View {
         return filtered
     }
     
+    private var yAxisRange: ClosedRange<Double> {
+        let values = filteredMetrics.map { $0.value }
+        guard let minValue = values.min(),
+              let maxValue = values.max() else {
+            return 0...100 // Default range if no data
+        }
+        
+        let range = maxValue - minValue
+        let padding = range * 0.1 // 10% padding
+        
+        return max(0, minValue - padding)...maxValue + padding
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Progress Over Time")
                     .font(.headline)
-                Spacer()
+                
                 Picker("Date Range", selection: $selectedDateRange) {
                     ForEach(DateRange.allCases, id: \.self) { range in
                         Text(range.rawValue).tag(range)
@@ -179,110 +230,51 @@ private struct ChartSection: View {
             }
             .padding(.horizontal)
             
-            Chart {
-                ForEach(filteredMetrics) { metric in
-                    LineMark(
-                        x: .value("Date", metric.date ?? Date()),
-                        y: .value("Value", metric.value)
-                    )
-                    .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Color.accentColor.opacity(0.5))
-                    
-                    PointMark(
-                        x: .value("Date", metric.date ?? Date()),
-                        y: .value("Value", metric.value)
-                    )
-                    .foregroundStyle(Color.accentColor)
-                    .symbolSize(selectedDataPoint?.id == metric.id ? 150 : 50)
-                }
+            Chart(filteredMetrics) { metric in
+                LineMark(
+                    x: .value("Date", metric.date ?? Date()),
+                    y: .value("Value", metric.value)
+                )
+                .interpolationMethod(.catmullRom)
+                .foregroundStyle(Color.accentColor.opacity(0.5))
+                
+                PointMark(
+                    x: .value("Date", metric.date ?? Date()),
+                    y: .value("Value", metric.value)
+                )
+                .foregroundStyle(Color.accentColor)
+                .symbolSize(selectedDataPoint?.id == metric.id ? 150 : 50)
             }
-            .chartOverlay { proxy in
-                GeometryReader { geometry in
-                    Rectangle()
-                        .fill(.clear)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    let currentX = value.location.x - geometry.size.width/2
-                                    guard let date = proxy.value(atX: currentX) as Date? else { return }
-                                    
-                                    // Find the closest data point
-                                    selectedDataPoint = filteredMetrics
-                                        .min(by: { abs($0.date?.timeIntervalSince(date) ?? 0) < abs($1.date?.timeIntervalSince(date) ?? 0) })
-                                }
-                                .onEnded { _ in
-                                    selectedDataPoint = nil
-                                }
-                        )
-                }
-            }
-            .chartBackground { proxy in
-                if let selectedDataPoint = selectedDataPoint,
-                   let date = selectedDataPoint.date {
-                    ZStack(alignment: .topLeading) {
-                        // Tooltip background
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(.systemBackground))
-                            .shadow(radius: 4)
-                            .frame(width: 120, height: 70)
-                        
-                        // Tooltip content
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(date.formatted(date: .abbreviated, time: .omitted))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text("\(Int(selectedDataPoint.value))")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(8)
-                    }
-                    .offset(x: proxy.position(forX: date) ?? 0)
-                    .animation(.snappy, value: selectedDataPoint)
-                }
-            }
-            .frame(height: 250)
-            .padding()
-            .background(Color(.secondarySystemGroupedBackground))
-            .animation(.snappy, value: selectedMetricType)
-            .animation(.snappy, value: selectedDateRange)
-        }
-    }
-}
-
-private struct HistorySection: View {
-    let history: [(date: Date, sets: [ExerciseSet])]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("History")
-                .font(.headline)
-                .padding(.horizontal)
-            
-            ForEach(history, id: \.date) { entry in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(entry.date.formatted(date: .abbreviated, time: .omitted))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    
-                    ForEach(entry.sets.sorted(by: { $0.order < $1.order })) { set in
-                        HStack {
-                            Text("Set \(set.order + 1)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("\(Int(set.weight))lbs × \(set.reps)")
-                                .font(.subheadline.bold())
+            .chartYScale(domain: yAxisRange)
+            .chartYAxis {
+                AxisMarks(position: .leading) { value in
+                    if let doubleValue = value.as(Double.self) {
+                        AxisValueLabel {
+                            switch selectedMetricType {
+                            case .maxReps:
+                                Text("\(Int(doubleValue))")
+                            default:
+                                Text("\(Int(doubleValue))lbs")
+                            }
                         }
                     }
                 }
-                .padding()
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .padding(.horizontal)
             }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .month, count: 1)) { value in
+                    if let date = value.as(Date.self) {
+                        AxisValueLabel {
+                            Text(date, format: .dateTime.month(.abbreviated))
+                        }
+                    }
+                }
+            }
+            .frame(height: 300)
         }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal)
     }
 }
 

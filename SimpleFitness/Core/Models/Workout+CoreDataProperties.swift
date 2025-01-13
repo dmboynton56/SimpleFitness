@@ -25,6 +25,7 @@ extension Workout: Identifiable {
     @NSManaged public var type: String?
     @NSManaged public var exercises: NSSet?
     @NSManaged public var route: Route?
+    @NSManaged public var cardioProgress: CardioProgress?
     
     public var exerciseArray: [Exercise] {
         let set = exercises as? Set<Exercise> ?? []

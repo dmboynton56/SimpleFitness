@@ -72,6 +72,7 @@
         <attribute name="maxPace" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="splitTimes" optional="YES" attributeType="String"/>
         <relationship name="route" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Route" inverseName="cardioProgress" inverseEntity="Route"/>
+        <relationship name="workout" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Workout" inverseName="cardioProgress" inverseEntity="Workout"/>
     </entity>
     <entity name="Workout" representedClassName="Workout" syncable="YES" codeGenerationType="class">
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -82,6 +83,7 @@
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Exercise" inverseName="workout" inverseEntity="Exercise"/>
-        <relationship name="route" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Route" inverseName="workout" inverseEntity="Route"/>
+        <relationship name="route" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Route" inverseName="workout" inverseEntity="Route"/>
+        <relationship name="cardioProgress" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="CardioProgress" inverseName="workout" inverseEntity="CardioProgress"/>
     </entity>
 </model>

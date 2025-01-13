@@ -18,144 +18,114 @@ struct SampleData {
     }
     
     private static func generateStrengthWorkouts(in context: NSManagedObjectContext) {
-        // Create exercise templates with realistic categories and exercises
-        let templates = [
-            // Push exercises
-            ("Bench Press", "Push", 135.0),
-            ("Overhead Press", "Push", 95.0),
-            ("Incline Bench Press", "Push", 115.0),
-            ("Tricep Extensions", "Push", 50.0),
-            
-            // Pull exercises
-            ("Barbell Row", "Pull", 135.0),
-            ("Pull-ups", "Pull", 0.0),  // Bodyweight
-            ("Lat Pulldown", "Pull", 120.0),
-            ("Dumbbell Curls", "Pull", 30.0),
-            
-            // Leg exercises
-            ("Squat", "Legs", 185.0),
-            ("Deadlift", "Legs", 225.0),
-            ("Leg Press", "Legs", 225.0),
-            ("Calf Raises", "Legs", 135.0)
-        ].map { name, category, baseWeight in
+        let calendar = Calendar.current
+        let today = Date()
+        // Start from 1.5 years ago and progress towards today
+        guard let startDate = calendar.date(byAdding: .day, value: -548, to: today) else { return }
+        
+        // Initial weights for compound movements (in lbs)
+        let exercises: [(name: String, category: String, startWeight: Double, endWeight: Double)] = [
+            // Main compound lifts with realistic progression
+            ("Bench Press", "Push", 135, 225),  // ~90lb improvement
+            ("Squat", "Legs", 185, 315),       // ~130lb improvement
+            ("Deadlift", "Pull", 225, 405),    // ~180lb improvement
+            ("Overhead Press", "Push", 85, 145), // ~60lb improvement
+            ("Barbell Row", "Pull", 135, 225),  // ~90lb improvement
+            ("Front Squat", "Legs", 135, 245)   // ~110lb improvement
+        ]
+        
+        // Create exercise templates
+        for (name, category, _, _) in exercises {
             let template = ExerciseTemplate(context: context)
             template.id = UUID()
             template.name = name
             template.category = category
-            return (template, baseWeight)
         }
         
-        // Generate workouts over the past 30 days
-        let calendar = Calendar.current
-        let today = Date()
-        
-        // Create a Push/Pull/Legs split
-        let workoutSplit = [
-            ("Push", [0, 1, 2, 3]),  // Push day exercises
-            ("Pull", [4, 5, 6, 7]),  // Pull day exercises
-            ("Legs", [8, 9, 10, 11]) // Leg day exercises
-        ]
-        
-        var dayOffset = 0
-        
-        // Generate 30 days of workouts
-        while dayOffset < 30 {
-            for (splitName, exerciseIndices) in workoutSplit {
-                // Skip some workouts randomly (15% chance) to simulate rest days
-                if Double.random(in: 0...1) < 0.15 {
-                    dayOffset += 1
-                    continue
+        // Generate 1.5 years (548 days) of workouts
+        for dayOffset in 0..<548 {
+            // Skip more days to achieve 2-3 workouts per week (70% chance to skip)
+            if Double.random(in: 0...1) < 0.7 {
+                continue
+            }
+            
+            // Calculate date progressing forward from start date
+            guard let workoutDate = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else { continue }
+            
+            // Calculate progress factors - More gradual and consistent progression
+            let monthProgress = Double(dayOffset) / 548.0  // Progress from 0 to 1 over the period
+            
+            // Add some wave periodization - slight variation in progress
+            let waveFactor = sin(Double(dayOffset) / 30.0) * 0.05 // 5% variation
+            let progressFactor = min(1.0, monthProgress + waveFactor)
+            
+            // Determine workout type based on day
+            let workoutType = dayOffset % 3 // 3-day split: Push/Pull/Legs
+            let category = ["Push", "Pull", "Legs"][workoutType]
+            
+            let workout = Workout(context: context)
+            workout.id = UUID()
+            workout.date = workoutDate
+            workout.type = "Strength"
+            workout.name = "\(category) Day"
+            
+            // Filter exercises for this workout type
+            let workoutExercises = exercises.filter { $0.category == category }
+            let selectedExercises = Array(workoutExercises.prefix(Int.random(in: 3...4)))
+            
+            for (name, _, startWeight, endWeight) in selectedExercises {
+                // Fetch template
+                let fetchRequest: NSFetchRequest<ExerciseTemplate> = ExerciseTemplate.fetchRequest()
+                fetchRequest.predicate = NSPredicate(format: "name == %@", name)
+                
+                guard let template = try? context.fetch(fetchRequest).first else { continue }
+                
+                let exercise = Exercise(context: context)
+                exercise.id = UUID()
+                exercise.template = template
+                exercise.workout = workout
+                
+                // Calculate weight progression with more consistent improvement
+                let baseWeight = startWeight
+                let totalGain = endWeight - startWeight
+                let currentGain = totalGain * progressFactor
+                let targetWeight = baseWeight + currentGain
+                
+                // Add some daily variation (smaller range for more consistency)
+                let variation = Double.random(in: -5...5)
+                let workingWeight = targetWeight + variation
+                
+                // Create 2-3 sets per exercise
+                let setCount = Int.random(in: 2...3)
+                for setNumber in 1...setCount {
+                    let set = ExerciseSet(context: context)
+                    set.id = UUID()
+                    set.exercise = exercise
+                    set.order = Int16(setNumber)
+                    
+                    // All working sets (no warm-up)
+                    set.weight = workingWeight
+                    set.reps = Int16.random(in: 6...10)
                 }
                 
-                guard let workoutDate = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
+                // Create strength progress
+                let progress = StrengthProgress(context: context)
+                progress.id = UUID()
+                progress.date = workoutDate
+                progress.exerciseTemplate = template
                 
-                let workout = Workout(context: context)
-                workout.id = UUID()
-                workout.date = workoutDate
-                workout.type = "Strength"
-                workout.name = splitName
+                // Calculate progress metrics
+                let sets = exercise.sets?.allObjects as? [ExerciseSet] ?? []
+                progress.totalSets = Int16(sets.count)
+                progress.maxWeight = sets.map { $0.weight }.max() ?? 0
+                progress.maxReps = sets.map { $0.reps }.max() ?? 0
+                progress.averageWeight = sets.map { $0.weight }.reduce(0, +) / Double(sets.count)
+                progress.totalVolume = sets.map { $0.weight * Double($0.reps) }.reduce(0, +)
                 
-                // Create exercises for this workout
-                for exerciseIndex in exerciseIndices {
-                    let (template, baseWeight) = templates[exerciseIndex]
-                    
-                    let exercise = Exercise(context: context)
-                    exercise.id = UUID()
-                    exercise.name = template.name
-                    exercise.template = template
-                    exercise.workout = workout
-                    
-                    // Calculate progressive overload
-                    let weekProgress = Double(dayOffset / 7) * 2.5  // 2.5 lbs increase per week
-                    
-                    // Generate sets
-                    let setCount = 4  // Consistent 4 sets for all exercises
-                    var exerciseSets = Set<ExerciseSet>()
-                    
-                    for setIndex in 0..<setCount {
-                        let set = ExerciseSet(context: context)
-                        set.id = UUID()
-                        set.exercise = exercise
-                        set.order = Int16(setIndex)
-                        
-                        // Calculate reps - pyramid down
-                        let baseReps: Int16 = 12
-                        set.reps = baseReps - Int16(setIndex * 2) + Int16.random(in: -1...1)
-                        
-                        // Calculate weight - pyramid up
-                        var setWeight = baseWeight
-                        setWeight += weekProgress // Progressive overload
-                        setWeight += Double(setIndex) * 5.0 // Weight increase per set
-                        setWeight += Double.random(in: -2.5...2.5) // Small variation
-                        setWeight = round(setWeight / 5) * 5 // Round to nearest 5
-                        
-                        set.weight = setWeight
-                        exerciseSets.insert(set)
-                    }
-                    
-                    exercise.sets = exerciseSets as NSSet
-                    
-                    // Create strength progress entry
-                    let progress = StrengthProgress.create(in: context)
-                    progress.exercise = exercise
-                    progress.exerciseTemplate = template
-                    progress.date = workoutDate
-                    
-                    // Update progress metrics
-                    let sets = exerciseSets
-                    progress.totalSets = Int16(sets.count)
-                    progress.maxWeight = sets.max(by: { $0.weight < $1.weight })?.weight ?? 0
-                    progress.maxReps = sets.max(by: { $0.reps < $1.reps })?.reps ?? 0
-                    progress.averageWeight = sets.reduce(0) { $0 + $1.weight } / Double(sets.count)
-                    progress.totalVolume = sets.reduce(0) { $0 + ($1.weight * Double($1.reps)) }
-                    
-                    // Calculate one rep max using the best set
-                    if let bestSet = sets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
-                        progress.oneRepMax = progress.calculateOneRepMax(weight: bestSet.weight, reps: bestSet.reps)
-                    }
-                    
-                    // Create progress metrics for charts
-                    for metricType in MetricType.allCases {
-                        let metric = ProgressMetric.create(in: context, type: metricType)
-                        metric.template = template
-                        metric.date = workoutDate
-                        
-                        switch metricType {
-                        case .oneRepMax:
-                            metric.value = progress.oneRepMax
-                        case .maxWeight:
-                            metric.value = progress.maxWeight
-                        case .maxReps:
-                            metric.value = Double(progress.maxReps)
-                        case .totalVolume:
-                            metric.value = progress.totalVolume
-                        case .averageWeight:
-                            metric.value = progress.averageWeight
-                        }
-                    }
+                // Calculate one rep max using Brzycki formula
+                if let bestSet = sets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
+                    progress.oneRepMax = bestSet.weight * (36.0 / (37.0 - Double(bestSet.reps)))
                 }
-                
-                dayOffset += 1
             }
         }
     }
@@ -163,15 +133,18 @@ struct SampleData {
     private static func generateCardioWorkouts(in context: NSManagedObjectContext) {
         let calendar = Calendar.current
         let today = Date()
+        // Start from 1.5 years ago and progress towards today
+        guard let startDate = calendar.date(byAdding: .day, value: -548, to: today) else { return }
         
-        // Generate 30 days of cardio workouts
-        for dayOffset in 0..<30 {
-            // Skip some days randomly (30% chance) to simulate rest days
-            if Double.random(in: 0...1) < 0.3 {
+        // Generate 1.5 years (548 days) of cardio workouts
+        for dayOffset in 0..<548 {
+            // Skip more days to achieve 2-3 workouts per week (70% chance to skip)
+            if Double.random(in: 0...1) < 0.7 {
                 continue
             }
             
-            guard let workoutDate = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
+            // Calculate date progressing forward from start date
+            guard let workoutDate = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else { continue }
             
             // Alternate between running and biking
             let isRunning = dayOffset % 2 == 0
@@ -182,58 +155,61 @@ struct SampleData {
             workout.type = isRunning ? "Running" : "Biking"
             workout.name = isRunning ? "Morning Run" : "Evening Ride"
             
-            // Create route
-            let route = Route(context: context)
-            route.id = UUID()
-            route.startTime = workoutDate
-            route.endTime = calendar.date(byAdding: .minute, value: Int.random(in: 30...90), to: workoutDate)
+            // Calculate progress factors - More gradual and consistent progression
+            let monthProgress = Double(dayOffset) / 548.0  // Progress from 0 to 1 over the period
             
-            // Generate route points
-            var totalDistance = 0.0
-            let targetDistance = Double.random(in: isRunning ? 3...8 : 10...20) // miles
-            var currentLat = 37.7749 // Sample starting point (San Francisco)
-            var currentLon = -122.4194
+            // Add some wave periodization
+            let waveFactor = sin(Double(dayOffset) / 30.0) * 0.05 // 5% variation
+            let progressFactor = min(1.0, monthProgress + waveFactor)
             
-            while totalDistance < targetDistance {
-                let point = RoutePoint(context: context)
-                point.id = UUID()
-                point.timestamp = calendar.date(byAdding: .second, value: Int.random(in: 10...30), to: route.startTime ?? workoutDate)
-                point.order = Int16((route.points?.count ?? 0))
-                
-                // Simulate movement
-                currentLat += Double.random(in: -0.001...0.001)
-                currentLon += Double.random(in: -0.001...0.001)
-                point.latitude = currentLat
-                point.longitude = currentLon
-                
-                point.route = route
-                
-                // Update total distance
-                if let previousPoint = route.pointsArray.last {
-                    let segmentDistance = route.calculateDistance(from: previousPoint, to: point)
-                    totalDistance += segmentDistance
-                }
-            }
+            // Running: Progress from shorter, slower runs to longer, faster runs
+            // Biking: Progress from shorter rides to longer rides with better pace
+            let baseDistance = isRunning ? 2.0 : 6.0  // Starting: 2mi run or 6mi ride
+            let maxDistance = isRunning ? 8.0 : 20.0  // Peak: 8mi run or 20mi ride
+            let distanceProgress = baseDistance + (maxDistance - baseDistance) * progressFactor
             
-            route.distance = totalDistance
-            workout.route = route
+            // Pace improvements (minutes per mile)
+            let basePace = isRunning ? 12.0 : 6.0     // Starting: 12min/mi run or 6min/mi ride
+            let targetPace = isRunning ? 8.0 : 4.0    // Peak: 8min/mi run or 4min/mi ride
+            let paceImprovement = (basePace - targetPace) * progressFactor
+            let currentPace = basePace - paceImprovement
+            
+            // Add some daily variation
+            let distance = distanceProgress * Double.random(in: 0.9...1.1)
+            let pace = currentPace * Double.random(in: 0.95...1.05)
+            
+            let duration = distance * pace * 60 // Convert to seconds
+            
+            workout.distance = distance
+            workout.duration = duration
             
             // Create cardio progress
             let progress = CardioProgress(context: context)
             progress.id = UUID()
             progress.date = workoutDate
-            progress.route = route
-            progress.updateFromRoute(route)
+            progress.distance = distance
+            progress.duration = duration
+            progress.averagePace = pace
+            progress.maxPace = pace * 0.9 // Best pace slightly faster than average
             
-            // Add some progression over time
-            let weekProgress = Double(dayOffset / 7)
-            progress.averagePace -= weekProgress * 0.1 // Slight improvement in pace over time
+            // Link the workout to the progress
+            workout.cardioProgress = progress
+            progress.workout = workout
             
-            // Save the workout
-            workout.distance = totalDistance
-            if let start = route.startTime, let end = route.endTime {
-                workout.duration = end.timeIntervalSince(start)
+            // More realistic elevation gains that increase over time
+            let baseElevation = isRunning ? 50.0 : 100.0
+            let maxElevation = isRunning ? 200.0 : 500.0
+            let elevationProgress = baseElevation + (maxElevation - baseElevation) * progressFactor
+            progress.elevationGain = elevationProgress * Double.random(in: 0.9...1.1)
+            
+            // Generate split data with consistent pacing
+            let splitCount = Int(ceil(distance))
+            var splits: [Double] = []
+            for _ in 0..<splitCount {
+                let splitVariation = Double.random(in: -0.3...0.3)
+                splits.append(pace + splitVariation)
             }
+            progress.splitTimes = splits.map { String(format: "%.2f", $0) }.joined(separator: ",")
         }
     }
     

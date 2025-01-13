@@ -17,13 +17,13 @@ class WorkoutListViewModel: NSObject, ObservableObject {
     }
     
     func generateSampleData() {
-        // First clear existing data
         SampleData.clearAllData(in: viewContext)
-        
-        // Then generate new sample data
         SampleData.generateSampleData(in: viewContext)
-        
-        // Refresh the workouts list
+        fetchWorkouts()
+    }
+    
+    func clearAllData() {
+        SampleData.clearAllData(in: viewContext)
         fetchWorkouts()
     }
     

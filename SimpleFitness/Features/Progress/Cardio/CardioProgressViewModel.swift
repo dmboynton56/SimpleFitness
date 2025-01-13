@@ -2,6 +2,7 @@ import Foundation
 import CoreData
 import Combine
 
+@MainActor
 class CardioProgressViewModel: ObservableObject {
     @Published var recentActivities: [CardioActivity] = []
     private var cancellables = Set<AnyCancellable>()
@@ -16,13 +17,14 @@ class CardioProgressViewModel: ObservableObject {
     private func setupObservers() {
         NotificationCenter.default
             .publisher(for: .NSManagedObjectContextDidSave, object: viewContext)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.fetchActivities()
             }
             .store(in: &cancellables)
     }
     
-    func progressData(for metric: CardioMetricType, timeRange: TimeRange) -> [(date: Date, value: Double)] {
+    func progressData(for metric: CardioMetricType, timeRange: TimeRange, workoutType: String) -> [(date: Date, value: Double)] {
         let request = CardioProgress.fetchRequest()
         
         // Add date filter based on time range
@@ -41,9 +43,12 @@ class CardioProgressViewModel: ObservableObject {
             fromDate = nil
         }
         
+        // Build predicate
+        var predicates: [NSPredicate] = [NSPredicate(format: "workout.type == %@", workoutType)]
         if let fromDate = fromDate {
-            request.predicate = NSPredicate(format: "date >= %@", fromDate as NSDate)
+            predicates.append(NSPredicate(format: "date >= %@", fromDate as NSDate))
         }
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \CardioProgress.date, ascending: true)]
         
@@ -79,6 +84,7 @@ class CardioProgressViewModel: ObservableObject {
         }
     }
     
+    @MainActor
     private func fetchActivities() {
         let request = CardioProgress.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \CardioProgress.date, ascending: false)]
@@ -87,16 +93,18 @@ class CardioProgressViewModel: ObservableObject {
         do {
             let results = try viewContext.fetch(request)
             recentActivities = results.compactMap { progress in
-                guard let date = progress.date else { return nil }
+                guard let date = progress.date,
+                      let workout = progress.workout else { return nil }
                 
                 // Parse split times
                 let splits = progress.splitTimes?
                     .split(separator: ",")
-                    .compactMap { Double($0.split(separator: ":")[1]) } ?? []
+                    .compactMap { Double(String($0).trimmingCharacters(in: .whitespaces)) } ?? []
                 
                 return CardioActivity(
                     id: progress.id ?? UUID(),
                     date: date,
+                    workoutType: workout.type ?? "Running",
                     distance: progress.distance,
                     duration: progress.duration / 60, // Convert to minutes
                     averagePace: progress.averagePace,

@@ -6,62 +6,52 @@ struct StrengthProgressView: View {
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
-                searchAndFilterSection
-                exerciseList
+            VStack(spacing: 16) {
+                // Search and Filter Section
+                VStack(spacing: 12) {
+                    TextField("Search exercises", text: $viewModel.searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .padding(.horizontal)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            CategoryButton(
+                                title: "All",
+                                isSelected: viewModel.selectedCategory == nil,
+                                action: { viewModel.selectedCategory = nil }
+                            )
+                            
+                            ForEach(viewModel.categories as [String], id: \.self) { category in
+                                CategoryButton(
+                                    title: category,
+                                    isSelected: viewModel.selectedCategory == category,
+                                    action: { viewModel.selectedCategory = category }
+                                )
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding(.horizontal)
+                
+                // Exercise List
+                LazyVStack(spacing: 16) {
+                    ForEach(viewModel.filteredTemplates as [ExerciseTemplate]) { template in
+                        ExerciseProgressCard(
+                            template: template,
+                            latestProgress: viewModel.getLatestProgress(for: template),
+                            progressMetrics: viewModel.getProgress(for: template)
+                        )
+                        .padding(.horizontal)
+                    }
+                }
             }
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground))
-    }
-    
-    private var searchAndFilterSection: some View {
-        VStack(spacing: 12) {
-            searchField
-            categoryFilter
-        }
-        .padding(.vertical)
-        .background(Color(.secondarySystemGroupedBackground))
-    }
-    
-    private var searchField: some View {
-        TextField("Search exercises", text: $viewModel.searchText)
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal)
-    }
-    
-    private var categoryFilter: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                CategoryButton(
-                    title: "All",
-                    isSelected: viewModel.selectedCategory == nil,
-                    action: { viewModel.selectedCategory = nil }
-                )
-                
-                ForEach(viewModel.categories as [String], id: \.self) { category in
-                    CategoryButton(
-                        title: category,
-                        isSelected: viewModel.selectedCategory == category,
-                        action: { viewModel.selectedCategory = category }
-                    )
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-    
-    private var exerciseList: some View {
-        LazyVStack(spacing: 16) {
-            ForEach(viewModel.filteredTemplates as [ExerciseTemplate]) { template in
-                ExerciseProgressCard(
-                    template: template,
-                    latestProgress: viewModel.getLatestProgress(for: template),
-                    progressMetrics: viewModel.getProgress(for: template)
-                )
-                .padding(.horizontal)
-            }
-        }
     }
 }
 

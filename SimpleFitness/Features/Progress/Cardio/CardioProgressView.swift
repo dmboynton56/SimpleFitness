@@ -5,16 +5,38 @@ struct CardioProgressView: View {
     @StateObject private var viewModel = CardioProgressViewModel()
     @State private var selectedMetric: CardioMetricType = .distance
     @State private var timeRange: TimeRange = .month
+    @State private var selectedWorkoutType: String = "Running"
     
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 // Metric Selection
-                Picker("Metric", selection: $selectedMetric) {
+                Menu {
                     ForEach(CardioMetricType.allCases) { metric in
-                        Text(metric.displayName)
-                            .tag(metric)
+                        Button {
+                            selectedMetric = metric
+                        } label: {
+                            Label(metric.displayName, systemImage: metricIcon(for: metric))
+                        }
                     }
+                } label: {
+                    HStack {
+                        Label(selectedMetric.displayName, systemImage: metricIcon(for: selectedMetric))
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .padding(.horizontal)
+                
+                // Workout Type Selection
+                Picker("Workout Type", selection: $selectedWorkoutType) {
+                    Text("Running").tag("Running")
+                    Text("Biking").tag("Biking")
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
@@ -31,7 +53,7 @@ struct CardioProgressView: View {
                 
                 // Progress Chart
                 CardioProgressChart(
-                    data: viewModel.progressData(for: selectedMetric, timeRange: timeRange),
+                    data: viewModel.progressData(for: selectedMetric, timeRange: timeRange, workoutType: selectedWorkoutType),
                     metric: selectedMetric
                 )
                 .frame(height: 300)
@@ -39,7 +61,7 @@ struct CardioProgressView: View {
                 
                 // Recent Activities
                 LazyVStack {
-                    ForEach(viewModel.recentActivities) { activity in
+                    ForEach(viewModel.recentActivities.filter { $0.workoutType == selectedWorkoutType }) { activity in
                         CardioActivityCard(activity: activity)
                             .padding(.horizontal)
                     }
@@ -48,6 +70,23 @@ struct CardioProgressView: View {
             .padding(.vertical)
         }
         .navigationTitle("Cardio Progress")
+    }
+    
+    private func metricIcon(for metric: CardioMetricType) -> String {
+        switch metric {
+        case .distance:
+            return "ruler"
+        case .duration:
+            return "clock"
+        case .averagePace:
+            return "speedometer"
+        case .bestPace:
+            return "bolt"
+        case .totalDistance:
+            return "sum"
+        case .elevationGain:
+            return "mountain.2"
+        }
     }
 }
 
@@ -120,8 +159,8 @@ struct CardioActivityCard: View {
                 Text(activity.date, format: .dateTime.month().day().year())
                     .font(.headline)
                 Spacer()
-                Image(systemName: "figure.run")
-                    .foregroundStyle(.blue)
+                Image(systemName: activity.workoutType == "Running" ? "figure.run" : "figure.outdoor.cycle")
+                    .foregroundStyle(activity.workoutType == "Running" ? .blue : .orange)
             }
             
             HStack {
@@ -224,6 +263,7 @@ enum TimeRange: String, CaseIterable, Identifiable {
 struct CardioActivity: Identifiable {
     let id: UUID
     let date: Date
+    let workoutType: String
     let distance: Double
     let duration: Double
     let averagePace: Double

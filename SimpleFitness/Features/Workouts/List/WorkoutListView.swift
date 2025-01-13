@@ -51,8 +51,16 @@ struct WorkoutListView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: viewModel.generateSampleData) {
-                        Label("Generate Sample", systemImage: "wand.and.stars")
+                    Menu {
+                        Button(action: viewModel.generateSampleData) {
+                            Label("Generate Sample Data", systemImage: "wand.and.stars")
+                        }
+                        
+                        Button(role: .destructive, action: viewModel.clearAllData) {
+                            Label("Clear All Data", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }

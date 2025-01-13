@@ -15,4 +15,5 @@ extension CardioProgress {
     @NSManaged public var elevationGain: Double
     @NSManaged public var splitTimes: String?
     @NSManaged public var route: Route?
+    @NSManaged public var workout: Workout?
 } 

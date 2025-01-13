@@ -52,6 +52,11 @@ struct StrengthProgressView: View {
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            Task {
+                await viewModel.loadData()
+            }
+        }
     }
 }
 

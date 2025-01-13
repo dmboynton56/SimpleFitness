@@ -85,7 +85,7 @@ class CardioProgressViewModel: ObservableObject {
     }
     
     @MainActor
-    private func fetchActivities() {
+    func fetchActivities() {
         let request = CardioProgress.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \CardioProgress.date, ascending: false)]
         request.fetchLimit = 10 // Only show recent activities

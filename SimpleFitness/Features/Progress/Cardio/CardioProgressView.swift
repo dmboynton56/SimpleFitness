@@ -70,6 +70,9 @@ struct CardioProgressView: View {
             .padding(.vertical)
         }
         .navigationTitle("Cardio Progress")
+        .onAppear {
+            viewModel.fetchActivities()
+        }
     }
     
     private func metricIcon(for metric: CardioMetricType) -> String {

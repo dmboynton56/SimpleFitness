@@ -6,23 +6,36 @@ import SwiftUI
 class StrengthProgressViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var selectedCategory: String?
-    @Published private(set) var templates: [ExerciseTemplate] = []
-    @Published private(set) var categories: [String] = []
+    @Published var categories: [String] = []
+    @Published private(set) var filteredTemplates: [ExerciseTemplate] = []
     
-    private let progressService: ProgressCalculationService
+    private var templates: [ExerciseTemplate] = []
     private let viewContext: NSManagedObjectContext
+    private let progressService: ProgressCalculationService
     
-    init(progressService: ProgressCalculationService = ProgressCalculationService.shared,
-         viewContext: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
+    init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext,
+         progressService: ProgressCalculationService = ProgressCalculationService.shared) {
+        self.viewContext = context
         self.progressService = progressService
-        self.viewContext = viewContext
-        
         Task {
             await loadData()
         }
     }
     
-    var filteredTemplates: [ExerciseTemplate] {
+    func loadData() async {
+        let fetchRequest = ExerciseTemplate.fetchRequest()
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \ExerciseTemplate.name, ascending: true)]
+        
+        do {
+            templates = try viewContext.fetch(fetchRequest)
+            categories = Array(Set(templates.compactMap { $0.category })).sorted()
+            updateFilteredTemplates()
+        } catch {
+            print("Error fetching exercise templates: \(error)")
+        }
+    }
+    
+    private func updateFilteredTemplates() {
         var filtered = templates
         
         if let category = selectedCategory {
@@ -36,7 +49,7 @@ class StrengthProgressViewModel: ObservableObject {
             }
         }
         
-        return filtered
+        filteredTemplates = filtered
     }
     
     func getLatestProgress(for template: ExerciseTemplate) -> StrengthProgress? {
@@ -45,17 +58,5 @@ class StrengthProgressViewModel: ObservableObject {
     
     func getProgress(for template: ExerciseTemplate) -> [ProgressMetric] {
         progressService.getProgressMetrics(for: template)
-    }
-    
-    private func loadData() async {
-        let fetchRequest = ExerciseTemplate.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \ExerciseTemplate.name, ascending: true)]
-        
-        do {
-            templates = try viewContext.fetch(fetchRequest)
-            categories = Array(Set(templates.compactMap { $0.category })).sorted()
-        } catch {
-            print("Error fetching exercise templates: \(error)")
-        }
     }
 } 

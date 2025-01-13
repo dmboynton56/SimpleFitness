@@ -132,85 +132,147 @@ struct SampleData {
     
     private static func generateCardioWorkouts(in context: NSManagedObjectContext) {
         let calendar = Calendar.current
-        let today = Date()
-        // Start from 1.5 years ago and progress towards today
-        guard let startDate = calendar.date(byAdding: .day, value: -548, to: today) else { return }
+        let now = Date()
+        let startDate = calendar.date(byAdding: .day, value: -548, to: now)! // 1.5 years ago
         
-        // Generate 1.5 years (548 days) of cardio workouts
-        for dayOffset in 0..<548 {
-            // Skip more days to achieve 2-3 workouts per week (70% chance to skip)
+        var currentDate = startDate
+        var runningWorkouts: [Workout] = []
+        var bikingWorkouts: [Workout] = []
+        
+        while currentDate <= now {
+            // 70% chance to skip a day to achieve 2-3 workouts per week
             if Double.random(in: 0...1) < 0.7 {
+                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
                 continue
             }
             
-            // Calculate date progressing forward from start date
-            guard let workoutDate = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else { continue }
-            
             // Alternate between running and biking
-            let isRunning = dayOffset % 2 == 0
+            let isRunning = calendar.component(.day, from: currentDate) % 2 == 0
             
             let workout = Workout(context: context)
             workout.id = UUID()
-            workout.date = workoutDate
+            workout.date = currentDate
             workout.type = isRunning ? "Running" : "Biking"
             workout.name = isRunning ? "Morning Run" : "Evening Ride"
             
-            // Calculate progress factors - More gradual and consistent progression
-            let monthProgress = Double(dayOffset) / 548.0  // Progress from 0 to 1 over the period
+            // Calculate progress based on time (0 to 1)
+            let totalDays = calendar.dateComponents([.day], from: startDate, to: now).day!
+            let currentDays = calendar.dateComponents([.day], from: startDate, to: currentDate).day!
+            let progressFactor = Double(currentDays) / Double(totalDays)
             
-            // Add some wave periodization
-            let waveFactor = sin(Double(dayOffset) / 30.0) * 0.05 // 5% variation
-            let progressFactor = min(1.0, monthProgress + waveFactor)
-            
-            // Running: Progress from shorter, slower runs to longer, faster runs
-            // Biking: Progress from shorter rides to longer rides with better pace
-            let baseDistance = isRunning ? 2.0 : 6.0  // Starting: 2mi run or 6mi ride
-            let maxDistance = isRunning ? 8.0 : 20.0  // Peak: 8mi run or 20mi ride
-            let distanceProgress = baseDistance + (maxDistance - baseDistance) * progressFactor
-            
-            // Pace improvements (minutes per mile)
-            let basePace = isRunning ? 12.0 : 6.0     // Starting: 12min/mi run or 6min/mi ride
-            let targetPace = isRunning ? 8.0 : 4.0    // Peak: 8min/mi run or 4min/mi ride
-            let paceImprovement = (basePace - targetPace) * progressFactor
-            let currentPace = basePace - paceImprovement
-            
-            // Add some daily variation
-            let distance = distanceProgress * Double.random(in: 0.9...1.1)
-            let pace = currentPace * Double.random(in: 0.95...1.05)
-            
-            let duration = distance * pace * 60 // Convert to seconds
-            
-            workout.distance = distance
-            workout.duration = duration
-            
-            // Create cardio progress
-            let progress = CardioProgress(context: context)
-            progress.id = UUID()
-            progress.date = workoutDate
-            progress.distance = distance
-            progress.duration = duration
-            progress.averagePace = pace
-            progress.maxPace = pace * 0.9 // Best pace slightly faster than average
-            
-            // Link the workout to the progress
+            // Generate realistic distances and paces with progression
+            let progress = generateCardioProgress(for: workout, progress: progressFactor)
             workout.cardioProgress = progress
-            progress.workout = workout
             
-            // More realistic elevation gains that increase over time
-            let baseElevation = isRunning ? 50.0 : 100.0
-            let maxElevation = isRunning ? 200.0 : 500.0
-            let elevationProgress = baseElevation + (maxElevation - baseElevation) * progressFactor
-            progress.elevationGain = elevationProgress * Double.random(in: 0.9...1.1)
+            // Set the workout's distance and duration from the progress
+            workout.distance = progress.distance
+            workout.duration = progress.duration
             
-            // Generate split data with consistent pacing
-            let splitCount = Int(ceil(distance))
-            var splits: [Double] = []
-            for _ in 0..<splitCount {
-                let splitVariation = Double.random(in: -0.3...0.3)
-                splits.append(pace + splitVariation)
+            if isRunning {
+                runningWorkouts.append(workout)
+            } else {
+                bikingWorkouts.append(workout)
             }
-            progress.splitTimes = splits.map { String(format: "%.2f", $0) }.joined(separator: ",")
+            
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
         }
+        
+        // Generate detailed routes only for the 3 most recent workouts of each type
+        for workouts in [runningWorkouts, bikingWorkouts] {
+            let recentWorkouts = Array(workouts.suffix(3))
+            for workout in recentWorkouts {
+                generateDetailedRoute(for: workout, in: context)
+            }
+        }
+    }
+    
+    private static func generateCardioProgress(for workout: Workout, progress: Double) -> CardioProgress {
+        let context = workout.managedObjectContext!
+        let cardioProgress = CardioProgress(context: context)
+        cardioProgress.id = UUID()
+        cardioProgress.date = workout.date
+        cardioProgress.workout = workout
+        
+        let isRunning = workout.type == "Running"
+        
+        // Add some random variation (-10% to +10%)
+        let variation = Double.random(in: -0.1...0.1)
+        let adjustedProgress = min(1.0, max(0.0, progress + variation))
+        
+        if isRunning {
+            // Running progression: 2-3 miles → 4-6 miles
+            cardioProgress.distance = lerp(start: Double.random(in: 2...3), end: Double.random(in: 4...6), progress: adjustedProgress)
+            // Pace improvement: 11-12 min/mile → 8-9 min/mile
+            cardioProgress.averagePace = lerp(start: Double.random(in: 11...12), end: Double.random(in: 8...9), progress: adjustedProgress)
+        } else {
+            // Biking progression: 6-8 miles → 12-15 miles
+            cardioProgress.distance = lerp(start: Double.random(in: 6...8), end: Double.random(in: 12...15), progress: adjustedProgress)
+            // Pace improvement: 5-6 min/mile → 4-5 min/mile
+            cardioProgress.averagePace = lerp(start: Double.random(in: 5...6), end: Double.random(in: 4...5), progress: adjustedProgress)
+        }
+        
+        // Calculate duration from distance and pace
+        cardioProgress.duration = cardioProgress.distance * cardioProgress.averagePace * 60 // Convert to seconds
+        
+        // Generate elevation gain (30-100ft early on, progressing to 150-300ft)
+        cardioProgress.elevationGain = lerp(start: Double.random(in: 30...100), end: Double.random(in: 150...300), progress: adjustedProgress)
+        
+        // Generate simple split times (roughly even pacing with small variations)
+        let basePace = cardioProgress.averagePace
+        let splits = (0..<Int(ceil(cardioProgress.distance))).map { _ in
+            basePace + Double.random(in: -0.5...0.5)
+        }
+        cardioProgress.splitTimes = splits.map { String(format: "%.2f", $0) }.joined(separator: ",")
+        
+        return cardioProgress
+    }
+    
+    private static func generateDetailedRoute(for workout: Workout, in context: NSManagedObjectContext) {
+        let route = Route(context: context)
+        route.id = UUID()
+        route.workout = workout
+        workout.route = route  // Set up bidirectional relationship
+        
+        guard let progress = workout.cardioProgress else { return }
+        
+        // Calculate number of points based on distance (roughly one point every 0.1 miles)
+        let pointCount = Int(progress.distance * 10)
+        
+        // Generate route points with realistic GPS coordinates
+        var lastLat = 37.7749 // Starting in San Francisco
+        var lastLng = -122.4194
+        var totalDistance: Double = 0
+        
+        for i in 0..<pointCount {
+            let point = RoutePoint(context: context)
+            point.id = UUID()
+            point.order = Int16(i)
+            point.route = route
+            
+            // Add some random variation to create a realistic path
+            let latDelta = Double.random(in: -0.001...0.001)
+            let lngDelta = Double.random(in: -0.001...0.001)
+            
+            lastLat += latDelta
+            lastLng += lngDelta
+            
+            point.latitude = lastLat
+            point.longitude = lastLng
+            point.timestamp = workout.date?.addingTimeInterval(Double(i) * (progress.duration / Double(pointCount)))
+            
+            if i > 0 {
+                let points = route.pointsArray
+                if let lastPoint = points[safe: i - 1] {
+                    totalDistance += route.calculateDistance(from: lastPoint, to: point)
+                }
+            }
+        }
+        
+        route.distance = totalDistance
+    }
+    
+    private static func lerp(start: Double, end: Double, progress: Double) -> Double {
+        return start + (end - start) * progress
     }
     
     static func clearAllData(in context: NSManagedObjectContext) {
@@ -247,5 +309,12 @@ struct SampleData {
         
         // Reset the context to ensure clean state
         context.reset()
+    }
+}
+
+// Add safe array access extension
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 } 

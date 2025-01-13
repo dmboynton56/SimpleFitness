@@ -17,43 +17,51 @@ struct WorkoutDetailView: View {
         List {
             Section {
                 workoutMetadataSection
+                
+                if viewModel.isCardioWorkout, let route = viewModel.workout.route {
+                    RouteMapView(route: route)
+                        .frame(height: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
             }
             
-            Section {
-                ForEach(viewModel.exercises) { exercise in
-                    NavigationLink {
-                        if let template = exercise.template {
-                            ExerciseProgressDetail(template: template)
-                        }
-                    } label: {
-                        ExerciseSetList(exercise: exercise)
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    viewModel.deleteExercise(exercise)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                
-                                Button {
-                                    selectedExercise = exercise
-                                    showingEditExerciseForm = true
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                                .tint(.blue)
+            if !viewModel.isCardioWorkout {
+                Section {
+                    ForEach(viewModel.exercises) { exercise in
+                        NavigationLink {
+                            if let template = exercise.template {
+                                ExerciseProgressDetail(template: template)
                             }
+                        } label: {
+                            ExerciseSetList(exercise: exercise)
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) {
+                                        viewModel.deleteExercise(exercise)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    
+                                    Button {
+                                        selectedExercise = exercise
+                                        showingEditExerciseForm = true
+                                    } label: {
+                                        Label("Edit", systemImage: "pencil")
+                                    }
+                                    .tint(.blue)
+                                }
+                        }
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                     }
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                }
-            } header: {
-                HStack {
-                    Text("Exercises")
-                    Spacer()
-                    Button {
-                        selectedExercise = nil
-                        showingEditExerciseForm = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
+                } header: {
+                    HStack {
+                        Text("Exercises")
+                        Spacer()
+                        Button {
+                            selectedExercise = nil
+                            showingEditExerciseForm = true
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                        }
                     }
                 }
             }
@@ -96,6 +104,38 @@ struct WorkoutDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            
+            if viewModel.isCardioWorkout {
+                HStack {
+                    Label {
+                        Text(String(format: "%.2f mi", viewModel.workout.distance))
+                    } icon: {
+                        Image(systemName: "figure.run")
+                    }
+                    
+                    Text("•")
+                        .foregroundStyle(.secondary)
+                    
+                    Label {
+                        Text(DateComponentsFormatter.timeFormatter.string(from: viewModel.workout.duration) ?? "0:00")
+                    } icon: {
+                        Image(systemName: "clock")
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
         }
     }
+}
+
+// Add time formatter
+private extension DateComponentsFormatter {
+    static let timeFormatter: DateComponentsFormatter = {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.zeroFormattingBehavior = .pad
+        formatter.unitsStyle = .positional
+        return formatter
+    }()
 } 

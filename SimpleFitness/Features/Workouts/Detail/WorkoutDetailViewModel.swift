@@ -2,7 +2,7 @@ import Foundation
 import CoreData
 
 class WorkoutDetailViewModel: ObservableObject {
-    private let workout: Workout
+    let workout: Workout
     private let context: NSManagedObjectContext
     private let progressService: ProgressCalculationService
     
@@ -11,6 +11,7 @@ class WorkoutDetailViewModel: ObservableObject {
     // Public read-only access to workout properties
     var workoutName: String { workout.name ?? "" }
     var workoutDate: Date? { workout.date }
+    var isCardioWorkout: Bool { workout.type == "Running" || workout.type == "Biking" }
     
     init(workout: Workout) {
         self.workout = workout

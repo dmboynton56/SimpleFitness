@@ -23,7 +23,9 @@ class ProgressCalculationService {
             }
             
             let progress = StrengthProgress(context: viewContext)
+            progress.id = UUID()
             progress.date = lastExercise.workout?.date
+            progress.exercise = lastExercise
             progress.exerciseTemplate = template
             
             // Calculate metrics
@@ -39,6 +41,7 @@ class ProgressCalculationService {
                 progress.oneRepMax = bestSet.weight * (36 / (37 - Double(bestSet.reps)))
             }
             
+            try viewContext.save()
             return progress
         } catch {
             print("Error fetching latest progress: \(error)")
@@ -64,47 +67,58 @@ class ProgressCalculationService {
                 // Max weight metric
                 if let maxWeight = sortedSets.map({ $0.weight }).max() {
                     let metric = ProgressMetric(context: viewContext)
+                    metric.id = UUID()
                     metric.date = date
                     metric.type = MetricType.maxWeight.rawValue
                     metric.value = maxWeight
+                    metric.template = template
                     metrics.append(metric)
                 }
                 
                 // Max reps metric
                 if let maxReps = sortedSets.map({ Double($0.reps) }).max() {
                     let metric = ProgressMetric(context: viewContext)
+                    metric.id = UUID()
                     metric.date = date
                     metric.type = MetricType.maxReps.rawValue
                     metric.value = maxReps
+                    metric.template = template
                     metrics.append(metric)
                 }
                 
                 // One rep max metric
                 if let bestSet = sortedSets.max(by: { $0.weight * Double($0.reps) < $1.weight * Double($1.reps) }) {
                     let metric = ProgressMetric(context: viewContext)
+                    metric.id = UUID()
                     metric.date = date
                     metric.type = MetricType.oneRepMax.rawValue
                     metric.value = bestSet.weight * (36 / (37 - Double(bestSet.reps)))
+                    metric.template = template
                     metrics.append(metric)
                 }
                 
                 // Total volume metric
                 let totalVolume = sortedSets.reduce(0.0) { $0 + ($1.weight * Double($1.reps)) }
                 let volumeMetric = ProgressMetric(context: viewContext)
+                volumeMetric.id = UUID()
                 volumeMetric.date = date
                 volumeMetric.type = MetricType.totalVolume.rawValue
                 volumeMetric.value = totalVolume
+                volumeMetric.template = template
                 metrics.append(volumeMetric)
                 
                 // Average weight metric
                 let avgWeight = sortedSets.map { $0.weight }.reduce(0, +) / Double(sets.count)
                 let avgMetric = ProgressMetric(context: viewContext)
+                avgMetric.id = UUID()
                 avgMetric.date = date
                 avgMetric.type = MetricType.averageWeight.rawValue
                 avgMetric.value = avgWeight
+                avgMetric.template = template
                 metrics.append(avgMetric)
             }
             
+            try viewContext.save()
             return metrics
         } catch {
             print("Error fetching progress metrics: \(error)")

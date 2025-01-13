@@ -9,10 +9,21 @@ A simple fitness tracking application that allows users to manually log workouts
 - Improved UI layout and spacing for better readability
 - Fixed exercise set editing and validation
 - Added map visualization for cardio workouts
+- Added progress tracking for strength and cardio workouts
+- Implemented tab-based navigation structure
 
 ## In Progress
 
-🚧 **Exercise Progress Tracking**: Implementing progress visualization and tracking across workouts, including weight progression, rep tracking, and performance metrics.
+🚧 **Exercise Progress Tracking**: Implementing progress visualization and tracking across workouts, including:
+- Weight progression tracking
+- Rep tracking and performance metrics
+- Cardio performance metrics
+- Progress visualization
+- Historical data analysis
+
+Current Phase: Phase 3 - Strength Progress Implementation
+✓ Completed: Navigation structure and data model
+⏳ In Progress: Strength progress UI implementation
 
 ## Features
 
@@ -22,6 +33,7 @@ A simple fitness tracking application that allows users to manually log workouts
 - Optional GPS tracking for outdoor activities
 - Workout history viewing
 - Route visualization for cardio workouts
+- Progress tracking for exercises
 - Immediate data persistence
 - Intuitive keyboard management
 - Clean, consistent UI layout
@@ -43,13 +55,16 @@ A simple fitness tracking application that allows users to manually log workouts
 - CoreData for persistence
 - MVVM architecture
 - Modular components for reusability
+- Service-based progress tracking
+- Tab-based navigation structure
 
 ## File Structure
 
 ```
 SimpleFitness/
 ├── App/
-│   └── SimpleFitnessApp.swift
+│   ├── SimpleFitnessApp.swift
+│   └── MainTabView.swift
 ├── Assets.xcassets/
 ├── Core/
 │   ├── Models/
@@ -60,14 +75,26 @@ SimpleFitness/
 │   │   ├── ExerciseSet+CoreDataClass.swift
 │   │   ├── ExerciseSet+CoreDataProperties.swift
 │   │   ├── Workout+CoreDataClass.swift
-│   │   └── Workout+CoreDataProperties.swift
+│   │   ├── Workout+CoreDataProperties.swift
+│   │   ├── StrengthProgress+CoreDataClass.swift
+│   │   ├── StrengthProgress+CoreDataProperties.swift
+│   │   ├── CardioProgress+CoreDataClass.swift
+│   │   ├── CardioProgress+CoreDataProperties.swift
+│   │   ├── ProgressMetric+CoreDataClass.swift
+│   │   └── ProgressMetric+CoreDataProperties.swift
 │   └── Services/
 │       ├── LocationManager.swift
 │       ├── Persistence.swift
-│       └── ExerciseTemplateService.swift
+│       ├── ExerciseTemplateService.swift
+│       └── ProgressCalculationService.swift
 ├── Features/
-│   ├── Profile/
-│   ├── Settings/
+│   ├── Progress/
+│   │   ├── Main/
+│   │   │   └── ProgressView.swift
+│   │   ├── Strength/
+│   │   ├── Cardio/
+│   │   ├── Charts/
+│   │   └── Detail/
 │   └── Workouts/
 │       ├── Add/
 │       │   ├── AddWorkoutView.swift
@@ -76,9 +103,7 @@ SimpleFitness/
 │       │   │   ├── WorkoutTypeSelectionView.swift
 │       │   │   ├── StrengthWorkoutForm.swift
 │       │   │   ├── CardioWorkoutForm.swift
-│       │   │   ├── ActiveWorkoutView.swift
-│       │   │   ├── ExerciseTemplateList.swift
-│       │   │   └── ExerciseTemplateListViewModel.swift
+│       │   │   └── ActiveWorkoutView.swift
 │       │   └── Models/
 │       │       └── WorkoutFormModel.swift
 │       ├── Detail/
@@ -106,6 +131,8 @@ Tests:
 - `NumberField`: Reusable numeric input with validation
 - `ExerciseEditForm`: Centralized exercise management
 - `ExerciseSetList`: Exercise set management with proper layout
+- `ProgressCalculationService`: Centralized progress tracking and calculations
+- `MainTabView`: Tab-based navigation controller
 - Focus state management for improved input handling
 
 ## Contributing

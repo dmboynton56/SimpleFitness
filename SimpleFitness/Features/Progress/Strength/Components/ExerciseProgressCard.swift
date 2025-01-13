@@ -69,9 +69,17 @@ struct ExerciseProgressCard: View {
 private struct ProgressChart: View {
     let metrics: [ProgressMetric]
     
+    private var filteredMetrics: [ProgressMetric] {
+        metrics.filter { metric in
+            guard let type = metric.type else { return false }
+            return type == MetricType.oneRepMax.rawValue ||
+                   type == MetricType.averageWeight.rawValue
+        }
+    }
+    
     var body: some View {
         Chart {
-            ForEach(metrics) { metric in
+            ForEach(filteredMetrics) { metric in
                 LineMark(
                     x: .value("Date", metric.date ?? Date()),
                     y: .value("Value", metric.value)

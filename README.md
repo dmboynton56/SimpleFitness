@@ -115,8 +115,10 @@ SimpleFitness/
 │           └── Components/
 │               └── ExerciseEditForm.swift
 └── Views/
-    ├── NumberField.swift
-    └── RouteMapView.swift
+│    ├── NumberField.swift
+│    └── RouteMapView.swift
+└── Docs/
+    ├── swiftrules.md
 ```
 
 ## Key Features

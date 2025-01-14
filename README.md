@@ -118,7 +118,7 @@ SimpleFitness/
 │    ├── NumberField.swift
 │    └── RouteMapView.swift
 └── Docs/
-    ├── swiftrules.md
+    └── swiftrules.md
 ```
 
 ## Key Features
